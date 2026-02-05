@@ -1267,7 +1267,13 @@ const t = {
 };
 class T extends c.Generator {
   constructor() {
-    super("Python"), this.imports = /* @__PURE__ */ new Set(), this.INDENT = "    ", this.registerGenerators();
+    super("Python"), this.imports = /* @__PURE__ */ new Set(), this.INDENT = "    ", this.registerGenerators(), this.setupScrub();
+  }
+  setupScrub() {
+    this.scrub_ = (e, a, r) => {
+      const o = e.nextConnection && e.nextConnection.targetBlock();
+      return o && !r ? a + this.blockToCode(o) : a;
+    };
   }
   getImports() {
     return Array.from(this.imports);

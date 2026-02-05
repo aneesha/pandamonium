@@ -32,6 +32,18 @@ export class PythonGenerator extends Blockly.Generator {
     this.INDENT = '    ';
 
     this.registerGenerators();
+    this.setupScrub();
+  }
+
+  private setupScrub(): void {
+    // Handle block connections (next statements)
+    this.scrub_ = (block: Blockly.Block, code: string, thisOnly?: boolean): string => {
+      const nextBlock = block.nextConnection && block.nextConnection.targetBlock();
+      if (nextBlock && !thisOnly) {
+        return code + this.blockToCode(nextBlock);
+      }
+      return code;
+    };
   }
 
   getImports(): string[] {
