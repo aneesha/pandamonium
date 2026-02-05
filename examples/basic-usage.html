@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandamonium - Basic Usage Example</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="../dist/pandamonium.umd.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #e94560;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 100px);
+    }
+    #blocklyDiv {
+      flex: 1;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .code-panel {
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h3 { color: #4ecca3; margin-bottom: 10px; }
+    pre {
+      flex: 1;
+      background: #0d1117;
+      padding: 16px;
+      border-radius: 8px;
+      overflow: auto;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐼 Pandamonium - Basic Usage</h1>
+  <div class="container">
+    <div id="blocklyDiv"></div>
+    <div class="code-panel">
+      <h3>Generated Python Code</h3>
+      <pre id="codeOutput">Drag blocks to generate code...</pre>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Pandamonium
+    const pandamonium = new Pandamonium.Pandamonium({
+      container: document.getElementById('blocklyDiv')
+    });
+
+    // Update code on change
+    pandamonium.onChange((code) => {
+      document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
+    });
+
+    // Load a simple example
+    const exampleWorkspace = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'pandas_set_dataframe',
+            x: 50,
+            y: 50,
+            fields: { VAR: 'df' },
+            inputs: {
+              VALUE: {
+                block: {
+                  type: 'pandas_read_csv',
+                  inputs: {
+                    PATH: {
+                      block: {
+                        type: 'text_value',
+                        fields: { TEXT: 'data.csv' }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            next: {
+              block: {
+                type: 'pandas_print',
+                inputs: {
+                  VALUE: {
+                    block: {
+                      type: 'pandas_head',
+                      fields: { N: 5 },
+                      inputs: {
+                        DATAFRAME: {
+                          block: {
+                            type: 'pandas_dataframe_var',
+                            fields: { VAR: 'df' }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    };
+
+    pandamonium.loadWorkspace(exampleWorkspace);
+  </script>
+</body>
+</html>

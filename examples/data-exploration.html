@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandamonium - Data Exploration</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="../dist/pandamonium.umd.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 10px; color: #e94560; }
+    p { margin-bottom: 20px; color: #aaa; }
+    .container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 120px);
+    }
+    #blocklyDiv {
+      flex: 1;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .code-panel {
+      width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h3 { color: #4ecca3; margin-bottom: 10px; }
+    pre {
+      flex: 1;
+      background: #0d1117;
+      padding: 16px;
+      border-radius: 8px;
+      overflow: auto;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #E65C00;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff7b00; }
+  </style>
+</head>
+<body>
+  <h1>🐼 Data Exploration Example</h1>
+  <p>This example shows common data exploration operations: loading, viewing, statistics, and grouping.</p>
+
+  <div class="container">
+    <div id="blocklyDiv"></div>
+    <div class="code-panel">
+      <h3>Generated Python Code</h3>
+      <pre id="codeOutput">Loading example...</pre>
+      <div class="actions">
+        <button onclick="copyCode()">📋 Copy Code</button>
+        <button onclick="clearWorkspace()">🗑️ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pandamonium = new Pandamonium.Pandamonium({
+      container: document.getElementById('blocklyDiv')
+    });
+
+    pandamonium.onChange((code) => {
+      document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
+    });
+
+    // Data exploration example
+    const explorationExample = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'comment_block',
+            x: 50,
+            y: 30,
+            fields: { COMMENT: 'Data Exploration Workflow' },
+            next: {
+              block: {
+                type: 'pandas_set_dataframe',
+                fields: { VAR: 'df' },
+                inputs: {
+                  VALUE: {
+                    block: {
+                      type: 'pandas_read_csv',
+                      inputs: {
+                        PATH: { block: { type: 'text_value', fields: { TEXT: 'sales_data.csv' } } }
+                      }
+                    }
+                  }
+                },
+                next: {
+                  block: {
+                    type: 'comment_block',
+                    fields: { COMMENT: 'View first few rows' },
+                    next: {
+                      block: {
+                        type: 'pandas_print',
+                        inputs: {
+                          VALUE: {
+                            block: {
+                              type: 'pandas_head',
+                              fields: { N: 10 },
+                              inputs: {
+                                DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                              }
+                            }
+                          }
+                        },
+                        next: {
+                          block: {
+                            type: 'comment_block',
+                            fields: { COMMENT: 'Check shape and columns' },
+                            next: {
+                              block: {
+                                type: 'pandas_print',
+                                inputs: {
+                                  VALUE: {
+                                    block: {
+                                      type: 'pandas_shape',
+                                      inputs: {
+                                        DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                                      }
+                                    }
+                                  }
+                                },
+                                next: {
+                                  block: {
+                                    type: 'pandas_print',
+                                    inputs: {
+                                      VALUE: {
+                                        block: {
+                                          type: 'pandas_columns',
+                                          inputs: {
+                                            DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    next: {
+                                      block: {
+                                        type: 'comment_block',
+                                        fields: { COMMENT: 'Get descriptive statistics' },
+                                        next: {
+                                          block: {
+                                            type: 'pandas_print',
+                                            inputs: {
+                                              VALUE: {
+                                                block: {
+                                                  type: 'pandas_describe',
+                                                  inputs: {
+                                                    DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            next: {
+                                              block: {
+                                                type: 'comment_block',
+                                                fields: { COMMENT: 'Group by category and sum' },
+                                                next: {
+                                                  block: {
+                                                    type: 'pandas_print',
+                                                    inputs: {
+                                                      VALUE: {
+                                                        block: {
+                                                          type: 'pandas_agg',
+                                                          fields: { FUNC: 'sum' },
+                                                          inputs: {
+                                                            GROUPED: {
+                                                              block: {
+                                                                type: 'pandas_groupby',
+                                                                inputs: {
+                                                                  DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } },
+                                                                  COLUMNS: { block: { type: 'text_value', fields: { TEXT: 'category' } } }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    next: {
+                                                      block: {
+                                                        type: 'comment_block',
+                                                        fields: { COMMENT: 'Check correlation' },
+                                                        next: {
+                                                          block: {
+                                                            type: 'pandas_print',
+                                                            inputs: {
+                                                              VALUE: {
+                                                                block: {
+                                                                  type: 'pandas_corr',
+                                                                  inputs: {
+                                                                    DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    };
+
+    pandamonium.loadWorkspace(explorationExample);
+
+    function copyCode() {
+      const code = pandamonium.generateCode();
+      navigator.clipboard.writeText(code);
+      alert('Code copied to clipboard!');
+    }
+
+    function clearWorkspace() {
+      pandamonium.clearWorkspace();
+    }
+  </script>
+</body>
+</html>

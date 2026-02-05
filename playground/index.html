@@ -1,0 +1,2490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandamonium - Visual Data Science Playground</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f3460;
+      --text-primary: #eee;
+      --text-secondary: #aaa;
+      --accent: #e94560;
+      --accent-hover: #ff6b6b;
+      --success: #4ecca3;
+      --warning: #ffc107;
+      --border: #2a2a4a;
+      --code-bg: #0d1117;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), #ff9a9e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-icon {
+      font-size: 1.8rem;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-dot.ready { background: var(--success); animation: none; }
+    .status-dot.error { background: var(--accent); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    select, button {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:hover, button:hover {
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    button.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    button.primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      padding: 6px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 4px;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      padding: 6px 10px;
+      font-size: 1rem;
+    }
+
+    #blocklyDiv {
+      flex: 1;
+      width: 100%;
+    }
+
+    #codeEditor {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      background: var(--code-bg);
+      color: #c9d1d9;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      border: none;
+      resize: none;
+      display: none;
+    }
+
+    .output-panel {
+      width: 45%;
+      display: flex;
+      flex-direction: column;
+      min-width: 300px;
+    }
+
+    .output-tabs {
+      display: flex;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .output-tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+    }
+
+    .output-tab.active {
+      color: var(--text-primary);
+      border-bottom-color: var(--accent);
+    }
+
+    .output-content {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      background: var(--code-bg);
+    }
+
+    #codeOutput, #consoleOutput {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: #c9d1d9;
+    }
+
+    #consoleOutput { display: none; }
+
+    .output-error { color: #f85149; }
+    .output-success { color: #3fb950; }
+    .output-info { color: #58a6ff; }
+
+    .run-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .run-info {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Blockly theme overrides */
+    .blocklyMainBackground { stroke: none !important; }
+    .blocklyToolboxDiv { background: var(--bg-secondary) !important; }
+
+    /* Loading overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 46, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+    }
+
+    .loading-progress {
+      margin-top: 12px;
+      width: 200px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .loading-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    .modal h3 {
+      margin-bottom: 16px;
+    }
+
+    .modal textarea {
+      width: 100%;
+      height: 200px;
+      padding: 12px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Initializing Pyodide...</div>
+    <div class="loading-progress">
+      <div class="loading-progress-bar" id="loadingBar"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-icon">🐼</span>
+        <h1>Pandamonium</h1>
+      </div>
+
+      <div class="header-controls">
+        <select id="exampleSelect">
+          <option value="">Load Example...</option>
+          <option value="explore">Load & Explore Data</option>
+          <option value="preprocess">Data Preprocessing</option>
+          <option value="classification">Classification Pipeline</option>
+          <option value="regression">Regression Pipeline</option>
+        </select>
+
+        <div class="status-badge">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Loading...</span>
+        </div>
+
+        <button class="primary" id="runBtn" disabled>▶ Run</button>
+      </div>
+    </header>
+
+    <div class="main-content">
+      <div class="editor-panel">
+        <div class="panel-header">
+          <div class="panel-tabs">
+            <button class="tab-btn active" id="blocksTab">Blocks</button>
+            <button class="tab-btn" id="codeTab">Code</button>
+          </div>
+          <div class="panel-actions">
+            <button class="icon-btn" id="saveBtn" title="Save Workspace">💾</button>
+            <button class="icon-btn" id="loadBtn" title="Load Workspace">📂</button>
+            <button class="icon-btn" id="clearBtn" title="Clear Workspace">🗑️</button>
+          </div>
+        </div>
+        <div id="blocklyDiv"></div>
+        <textarea id="codeEditor" spellcheck="false"></textarea>
+      </div>
+
+      <div class="output-panel">
+        <div class="output-tabs">
+          <button class="output-tab active" id="outputTab">Output</button>
+          <button class="output-tab" id="codeViewTab">Generated Code</button>
+        </div>
+        <div class="output-content">
+          <pre id="consoleOutput"></pre>
+          <pre id="codeOutput">Generated Python code will appear here...</pre>
+        </div>
+        <div class="run-bar">
+          <span class="run-info" id="runInfo">Ready to run</span>
+          <button id="copyCodeBtn">📋 Copy Code</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="saveModal">
+    <div class="modal">
+      <h3>💾 Save Workspace</h3>
+      <textarea id="saveData" readonly></textarea>
+      <div class="modal-actions">
+        <button id="copySaveBtn">Copy to Clipboard</button>
+        <button id="closeSaveModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="loadModal">
+    <div class="modal">
+      <h3>📂 Load Workspace</h3>
+      <textarea id="loadData" placeholder="Paste workspace JSON here..."></textarea>
+      <div class="modal-actions">
+        <button id="cancelLoadBtn">Cancel</button>
+        <button class="primary" id="confirmLoadBtn">Load</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // State Management
+    // ============================================
+    const state = {
+      pyodide: null,
+      workspace: null,
+      currentView: 'blocks',
+      outputView: 'code',
+      isRunning: false,
+      pyodideReady: false
+    };
+
+    // ============================================
+    // Block Definitions
+    // ============================================
+    const PANDAS_COLOR = '#E65C00';
+    const SKLEARN_COLOR = '#00897B';
+    const PREPROCESS_COLOR = '#00ACC1';
+    const METRICS_COLOR = '#EF5350';
+    const VALUES_COLOR = '#9575CD';
+    const COLLECTIONS_COLOR = '#4DB6AC';
+
+    // Pandas Blocks
+    Blockly.Blocks['pandas_read_csv'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_read_csv',
+          message0: 'read CSV %1',
+          args0: [{ type: 'input_value', name: 'PATH', check: 'String' }],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Read CSV file into DataFrame'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_dataframe_var'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_dataframe_var',
+          message0: 'DataFrame %1',
+          args0: [{ type: 'field_variable', name: 'VAR', variable: 'df' }],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Reference a DataFrame variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_set_dataframe'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_set_dataframe',
+          message0: 'set %1 = %2',
+          args0: [
+            { type: 'field_variable', name: 'VAR', variable: 'df' },
+            { type: 'input_value', name: 'VALUE', check: 'DataFrame' }
+          ],
+          previousStatement: null,
+          nextStatement: null,
+          colour: PANDAS_COLOR,
+          tooltip: 'Assign DataFrame to variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_head'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_head',
+          message0: 'first %1 rows of %2',
+          args0: [
+            { type: 'field_number', name: 'N', value: 5, min: 1 },
+            { type: 'input_value', name: 'DF', check: 'DataFrame' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Get first n rows'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_tail'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_tail',
+          message0: 'last %1 rows of %2',
+          args0: [
+            { type: 'field_number', name: 'N', value: 5, min: 1 },
+            { type: 'input_value', name: 'DF', check: 'DataFrame' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Get last n rows'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_describe'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_describe',
+          message0: 'describe %1',
+          args0: [{ type: 'input_value', name: 'DF', check: 'DataFrame' }],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Generate descriptive statistics'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_shape'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_shape',
+          message0: 'shape of %1',
+          args0: [{ type: 'input_value', name: 'DF', check: 'DataFrame' }],
+          output: 'Tuple',
+          colour: PANDAS_COLOR,
+          tooltip: 'Get DataFrame shape'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_columns'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_columns',
+          message0: 'columns of %1',
+          args0: [{ type: 'input_value', name: 'DF', check: 'DataFrame' }],
+          output: 'Array',
+          colour: PANDAS_COLOR,
+          tooltip: 'Get column names'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_select_column'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_select_column',
+          message0: 'column %1 from %2',
+          args0: [
+            { type: 'input_value', name: 'COL', check: 'String' },
+            { type: 'input_value', name: 'DF', check: 'DataFrame' }
+          ],
+          output: 'Series',
+          colour: PANDAS_COLOR,
+          tooltip: 'Select single column'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_select_columns'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_select_columns',
+          message0: 'columns %1 from %2',
+          args0: [
+            { type: 'input_value', name: 'COLS', check: 'Array' },
+            { type: 'input_value', name: 'DF', check: 'DataFrame' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Select multiple columns'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_drop_columns'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_drop_columns',
+          message0: 'drop columns %1 from %2',
+          args0: [
+            { type: 'input_value', name: 'COLS', check: 'Array' },
+            { type: 'input_value', name: 'DF', check: 'DataFrame' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Drop columns'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_dropna'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_dropna',
+          message0: 'drop null rows from %1',
+          args0: [{ type: 'input_value', name: 'DF', check: 'DataFrame' }],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Drop rows with null values'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_fillna'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_fillna',
+          message0: 'fill nulls in %1 with %2',
+          args0: [
+            { type: 'input_value', name: 'DF', check: 'DataFrame' },
+            { type: 'input_value', name: 'VALUE' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Fill null values'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_groupby'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_groupby',
+          message0: 'group %1 by %2',
+          args0: [
+            { type: 'input_value', name: 'DF', check: 'DataFrame' },
+            { type: 'input_value', name: 'COL', check: 'String' }
+          ],
+          output: 'GroupBy',
+          colour: PANDAS_COLOR,
+          tooltip: 'Group by column'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_agg'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_agg',
+          message0: '%1 %2',
+          args0: [
+            { type: 'input_value', name: 'GROUP', check: 'GroupBy' },
+            { type: 'field_dropdown', name: 'FUNC', options: [
+              ['sum', 'sum'], ['mean', 'mean'], ['count', 'count'],
+              ['min', 'min'], ['max', 'max'], ['std', 'std']
+            ]}
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Aggregate grouped data'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_sort'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_sort',
+          message0: 'sort %1 by %2 %3',
+          args0: [
+            { type: 'input_value', name: 'DF', check: 'DataFrame' },
+            { type: 'input_value', name: 'COL', check: 'String' },
+            { type: 'field_dropdown', name: 'ORDER', options: [
+              ['ascending', 'True'], ['descending', 'False']
+            ]}
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Sort by column'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_filter'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_filter',
+          message0: 'filter %1 where %2 %3 %4',
+          args0: [
+            { type: 'input_value', name: 'DF', check: 'DataFrame' },
+            { type: 'input_value', name: 'COL', check: 'String' },
+            { type: 'field_dropdown', name: 'OP', options: [
+              ['==', '=='], ['!=', '!='], ['>', '>'],
+              ['<', '<'], ['>=', '>='], ['<=', '<=']
+            ]},
+            { type: 'input_value', name: 'VALUE' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Filter rows'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_merge'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_merge',
+          message0: 'merge %1 with %2 on %3',
+          args0: [
+            { type: 'input_value', name: 'LEFT', check: 'DataFrame' },
+            { type: 'input_value', name: 'RIGHT', check: 'DataFrame' },
+            { type: 'input_value', name: 'ON', check: 'String' }
+          ],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Merge DataFrames'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_value_counts'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_value_counts',
+          message0: 'value counts of %1',
+          args0: [{ type: 'input_value', name: 'SERIES', check: 'Series' }],
+          output: 'Series',
+          colour: PANDAS_COLOR,
+          tooltip: 'Count unique values'
+        });
+      }
+    };
+
+    Blockly.Blocks['pandas_corr'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'pandas_corr',
+          message0: 'correlation of %1',
+          args0: [{ type: 'input_value', name: 'DF', check: 'DataFrame' }],
+          output: 'DataFrame',
+          colour: PANDAS_COLOR,
+          tooltip: 'Correlation matrix'
+        });
+      }
+    };
+
+    // Sklearn Blocks
+    Blockly.Blocks['sklearn_train_test_split'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_train_test_split',
+          message0: 'split X: %1 y: %2 test: %3',
+          args0: [
+            { type: 'input_value', name: 'X', check: ['DataFrame', 'Array'] },
+            { type: 'input_value', name: 'Y', check: ['Series', 'Array'] },
+            { type: 'field_number', name: 'SIZE', value: 0.2, min: 0.1, max: 0.5, precision: 0.1 }
+          ],
+          output: 'SplitData',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Split into train/test sets'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_get_split'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_get_split',
+          message0: '%1 from %2',
+          args0: [
+            { type: 'field_dropdown', name: 'PART', options: [
+              ['X_train', '0'], ['X_test', '1'], ['y_train', '2'], ['y_test', '3']
+            ]},
+            { type: 'input_value', name: 'SPLIT', check: 'SplitData' }
+          ],
+          output: ['DataFrame', 'Series', 'Array'],
+          colour: SKLEARN_COLOR,
+          tooltip: 'Get part of split data'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_standard_scaler'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_standard_scaler',
+          message0: 'StandardScaler',
+          output: 'Scaler',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Standard scaler (zero mean, unit variance)'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_minmax_scaler'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_minmax_scaler',
+          message0: 'MinMaxScaler',
+          output: 'Scaler',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Scale to [0, 1] range'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_fit_transform'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_fit_transform',
+          message0: 'fit & transform %1 with %2',
+          args0: [
+            { type: 'input_value', name: 'DATA', check: ['DataFrame', 'Array'] },
+            { type: 'input_value', name: 'SCALER', check: 'Scaler' }
+          ],
+          output: 'Array',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Fit scaler and transform data'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_transform'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_transform',
+          message0: 'transform %1 with %2',
+          args0: [
+            { type: 'input_value', name: 'DATA', check: ['DataFrame', 'Array'] },
+            { type: 'input_value', name: 'SCALER', check: 'Scaler' }
+          ],
+          output: 'Array',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Transform data with fitted scaler'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_label_encoder'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_label_encoder',
+          message0: 'LabelEncoder',
+          output: 'Encoder',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Encode labels as integers'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_linear_regression'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_linear_regression',
+          message0: 'LinearRegression',
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Linear regression model'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_logistic_regression'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_logistic_regression',
+          message0: 'LogisticRegression',
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Logistic regression classifier'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_decision_tree'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_decision_tree',
+          message0: 'DecisionTree %1 depth %2',
+          args0: [
+            { type: 'field_dropdown', name: 'TYPE', options: [
+              ['Classifier', 'Classifier'], ['Regressor', 'Regressor']
+            ]},
+            { type: 'field_number', name: 'DEPTH', value: 5, min: 1, max: 20 }
+          ],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Decision tree model'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_random_forest'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_random_forest',
+          message0: 'RandomForest %1 trees %2',
+          args0: [
+            { type: 'field_dropdown', name: 'TYPE', options: [
+              ['Classifier', 'Classifier'], ['Regressor', 'Regressor']
+            ]},
+            { type: 'field_number', name: 'TREES', value: 100, min: 10, max: 500 }
+          ],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Random forest model'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_svm'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_svm',
+          message0: 'SVM %1 kernel %2',
+          args0: [
+            { type: 'field_dropdown', name: 'TYPE', options: [
+              ['Classifier', 'SVC'], ['Regressor', 'SVR']
+            ]},
+            { type: 'field_dropdown', name: 'KERNEL', options: [
+              ['rbf', 'rbf'], ['linear', 'linear'], ['poly', 'poly']
+            ]}
+          ],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Support Vector Machine'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_knn'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_knn',
+          message0: 'KNN %1 neighbors %2',
+          args0: [
+            { type: 'field_dropdown', name: 'TYPE', options: [
+              ['Classifier', 'Classifier'], ['Regressor', 'Regressor']
+            ]},
+            { type: 'field_number', name: 'K', value: 5, min: 1, max: 20 }
+          ],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'K-Nearest Neighbors'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_kmeans'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_kmeans',
+          message0: 'KMeans clusters %1',
+          args0: [{ type: 'field_number', name: 'K', value: 3, min: 2, max: 20 }],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'K-Means clustering'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_pca'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_pca',
+          message0: 'PCA components %1',
+          args0: [{ type: 'field_number', name: 'N', value: 2, min: 1 }],
+          output: 'Transformer',
+          colour: PREPROCESS_COLOR,
+          tooltip: 'Principal Component Analysis'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_model_var'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_model_var',
+          message0: 'model %1',
+          args0: [{ type: 'field_variable', name: 'VAR', variable: 'model' }],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Reference a model variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_set_model'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_set_model',
+          message0: 'set %1 = %2',
+          args0: [
+            { type: 'field_variable', name: 'VAR', variable: 'model' },
+            { type: 'input_value', name: 'VALUE', check: ['Model', 'Scaler', 'Transformer'] }
+          ],
+          previousStatement: null,
+          nextStatement: null,
+          colour: SKLEARN_COLOR,
+          tooltip: 'Assign model to variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_fit'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_fit',
+          message0: 'fit %1 with X: %2 y: %3',
+          args0: [
+            { type: 'input_value', name: 'MODEL', check: 'Model' },
+            { type: 'input_value', name: 'X', check: ['DataFrame', 'Array'] },
+            { type: 'input_value', name: 'Y', check: ['Series', 'Array'] }
+          ],
+          output: 'Model',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Fit model to data'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_predict'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_predict',
+          message0: 'predict with %1 on %2',
+          args0: [
+            { type: 'input_value', name: 'MODEL', check: 'Model' },
+            { type: 'input_value', name: 'X', check: ['DataFrame', 'Array'] }
+          ],
+          output: 'Array',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Make predictions'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_score'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_score',
+          message0: 'score %1 on X: %2 y: %3',
+          args0: [
+            { type: 'input_value', name: 'MODEL', check: 'Model' },
+            { type: 'input_value', name: 'X', check: ['DataFrame', 'Array'] },
+            { type: 'input_value', name: 'Y', check: ['Series', 'Array'] }
+          ],
+          output: 'Number',
+          colour: SKLEARN_COLOR,
+          tooltip: 'Calculate model score'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_accuracy'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_accuracy',
+          message0: 'accuracy y_true: %1 y_pred: %2',
+          args0: [
+            { type: 'input_value', name: 'TRUE', check: ['Series', 'Array'] },
+            { type: 'input_value', name: 'PRED', check: 'Array' }
+          ],
+          output: 'Number',
+          colour: METRICS_COLOR,
+          tooltip: 'Calculate accuracy'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_mse'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_mse',
+          message0: 'MSE y_true: %1 y_pred: %2',
+          args0: [
+            { type: 'input_value', name: 'TRUE', check: ['Series', 'Array'] },
+            { type: 'input_value', name: 'PRED', check: 'Array' }
+          ],
+          output: 'Number',
+          colour: METRICS_COLOR,
+          tooltip: 'Mean Squared Error'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_r2'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_r2',
+          message0: 'R² y_true: %1 y_pred: %2',
+          args0: [
+            { type: 'input_value', name: 'TRUE', check: ['Series', 'Array'] },
+            { type: 'input_value', name: 'PRED', check: 'Array' }
+          ],
+          output: 'Number',
+          colour: METRICS_COLOR,
+          tooltip: 'R-squared score'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_confusion_matrix'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_confusion_matrix',
+          message0: 'confusion matrix y_true: %1 y_pred: %2',
+          args0: [
+            { type: 'input_value', name: 'TRUE', check: ['Series', 'Array'] },
+            { type: 'input_value', name: 'PRED', check: 'Array' }
+          ],
+          output: 'Array',
+          colour: METRICS_COLOR,
+          tooltip: 'Confusion matrix'
+        });
+      }
+    };
+
+    Blockly.Blocks['sklearn_classification_report'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'sklearn_classification_report',
+          message0: 'classification report y_true: %1 y_pred: %2',
+          args0: [
+            { type: 'input_value', name: 'TRUE', check: ['Series', 'Array'] },
+            { type: 'input_value', name: 'PRED', check: 'Array' }
+          ],
+          output: 'String',
+          colour: METRICS_COLOR,
+          tooltip: 'Classification report'
+        });
+      }
+    };
+
+    // Common Blocks
+    Blockly.Blocks['text_value'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'text_value',
+          message0: '"%1"',
+          args0: [{ type: 'field_input', name: 'TEXT', text: '' }],
+          output: 'String',
+          colour: VALUES_COLOR,
+          tooltip: 'Text string'
+        });
+      }
+    };
+
+    Blockly.Blocks['number_value'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'number_value',
+          message0: '%1',
+          args0: [{ type: 'field_number', name: 'NUM', value: 0 }],
+          output: 'Number',
+          colour: VALUES_COLOR,
+          tooltip: 'Number'
+        });
+      }
+    };
+
+    Blockly.Blocks['array_create'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'array_create',
+          message0: 'list [ %1 ]',
+          args0: [{ type: 'field_input', name: 'ITEMS', text: 'a, b, c' }],
+          output: 'Array',
+          colour: COLLECTIONS_COLOR,
+          tooltip: 'Create list (comma-separated strings)'
+        });
+      }
+    };
+
+    Blockly.Blocks['print_value'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'print_value',
+          message0: 'print %1',
+          args0: [{ type: 'input_value', name: 'VALUE' }],
+          previousStatement: null,
+          nextStatement: null,
+          colour: VALUES_COLOR,
+          tooltip: 'Print value'
+        });
+      }
+    };
+
+    Blockly.Blocks['var_set'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'var_set',
+          message0: 'set %1 = %2',
+          args0: [
+            { type: 'field_variable', name: 'VAR', variable: 'x' },
+            { type: 'input_value', name: 'VALUE' }
+          ],
+          previousStatement: null,
+          nextStatement: null,
+          colour: '#8D6E63',
+          tooltip: 'Set variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['var_get'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'var_get',
+          message0: '%1',
+          args0: [{ type: 'field_variable', name: 'VAR', variable: 'x' }],
+          output: null,
+          colour: '#8D6E63',
+          tooltip: 'Get variable'
+        });
+      }
+    };
+
+    Blockly.Blocks['comment'] = {
+      init: function() {
+        this.jsonInit({
+          type: 'comment',
+          message0: '# %1',
+          args0: [{ type: 'field_input', name: 'TEXT', text: 'comment' }],
+          previousStatement: null,
+          nextStatement: null,
+          colour: '#607D8B',
+          tooltip: 'Comment'
+        });
+      }
+    };
+
+    // ============================================
+    // Python Code Generator
+    // ============================================
+    const pythonGenerator = new Blockly.Generator('Python');
+    pythonGenerator.INDENT = '    ';
+
+    const imports = new Set();
+
+    function addImport(imp) {
+      imports.add(imp);
+    }
+
+    // Pandas generators
+    pythonGenerator.forBlock['pandas_read_csv'] = function(block) {
+      addImport('import pandas as pd');
+      const path = pythonGenerator.valueToCode(block, 'PATH', 0) || '""';
+      return [`pd.read_csv(${path})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_dataframe_var'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'df';
+      return [v, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_set_dataframe'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'df';
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'pd.DataFrame()';
+      return `${v} = ${val}\n`;
+    };
+
+    pythonGenerator.forBlock['pandas_head'] = function(block) {
+      const n = block.getFieldValue('N') || 5;
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.head(${n})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_tail'] = function(block) {
+      const n = block.getFieldValue('N') || 5;
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.tail(${n})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_describe'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.describe()`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_shape'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.shape`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_columns'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.columns.tolist()`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_select_column'] = function(block) {
+      const col = pythonGenerator.valueToCode(block, 'COL', 0) || '""';
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}[${col}]`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_select_columns'] = function(block) {
+      const cols = pythonGenerator.valueToCode(block, 'COLS', 0) || '[]';
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}[${cols}]`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_drop_columns'] = function(block) {
+      const cols = pythonGenerator.valueToCode(block, 'COLS', 0) || '[]';
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.drop(columns=${cols})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_dropna'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.dropna()`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_fillna'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || '0';
+      return [`${df}.fillna(${val})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_groupby'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      const col = pythonGenerator.valueToCode(block, 'COL', 0) || '""';
+      return [`${df}.groupby(${col})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_agg'] = function(block) {
+      const grp = pythonGenerator.valueToCode(block, 'GROUP', 0) || 'df.groupby("col")';
+      const func = block.getFieldValue('FUNC') || 'sum';
+      return [`${grp}.${func}()`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_sort'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      const col = pythonGenerator.valueToCode(block, 'COL', 0) || '""';
+      const asc = block.getFieldValue('ORDER') || 'True';
+      return [`${df}.sort_values(by=${col}, ascending=${asc})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_filter'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      const col = pythonGenerator.valueToCode(block, 'COL', 0) || '""';
+      const op = block.getFieldValue('OP') || '==';
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || '0';
+      return [`${df}[${df}[${col}] ${op} ${val}]`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_merge'] = function(block) {
+      addImport('import pandas as pd');
+      const left = pythonGenerator.valueToCode(block, 'LEFT', 0) || 'df1';
+      const right = pythonGenerator.valueToCode(block, 'RIGHT', 0) || 'df2';
+      const on = pythonGenerator.valueToCode(block, 'ON', 0) || '""';
+      return [`pd.merge(${left}, ${right}, on=${on})`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_value_counts'] = function(block) {
+      const series = pythonGenerator.valueToCode(block, 'SERIES', 0) || 'df["col"]';
+      return [`${series}.value_counts()`, 0];
+    };
+
+    pythonGenerator.forBlock['pandas_corr'] = function(block) {
+      const df = pythonGenerator.valueToCode(block, 'DF', 0) || 'df';
+      return [`${df}.corr()`, 0];
+    };
+
+    // Sklearn generators
+    pythonGenerator.forBlock['sklearn_train_test_split'] = function(block) {
+      addImport('from sklearn.model_selection import train_test_split');
+      const x = pythonGenerator.valueToCode(block, 'X', 0) || 'X';
+      const y = pythonGenerator.valueToCode(block, 'Y', 0) || 'y';
+      const size = block.getFieldValue('SIZE') || 0.2;
+      return [`train_test_split(${x}, ${y}, test_size=${size}, random_state=42)`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_get_split'] = function(block) {
+      const part = block.getFieldValue('PART') || '0';
+      const split = pythonGenerator.valueToCode(block, 'SPLIT', 0) || 'split_data';
+      return [`${split}[${part}]`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_standard_scaler'] = function() {
+      addImport('from sklearn.preprocessing import StandardScaler');
+      return ['StandardScaler()', 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_minmax_scaler'] = function() {
+      addImport('from sklearn.preprocessing import MinMaxScaler');
+      return ['MinMaxScaler()', 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_fit_transform'] = function(block) {
+      const data = pythonGenerator.valueToCode(block, 'DATA', 0) || 'X';
+      const scaler = pythonGenerator.valueToCode(block, 'SCALER', 0) || 'scaler';
+      return [`${scaler}.fit_transform(${data})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_transform'] = function(block) {
+      const data = pythonGenerator.valueToCode(block, 'DATA', 0) || 'X';
+      const scaler = pythonGenerator.valueToCode(block, 'SCALER', 0) || 'scaler';
+      return [`${scaler}.transform(${data})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_label_encoder'] = function() {
+      addImport('from sklearn.preprocessing import LabelEncoder');
+      return ['LabelEncoder()', 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_linear_regression'] = function() {
+      addImport('from sklearn.linear_model import LinearRegression');
+      return ['LinearRegression()', 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_logistic_regression'] = function() {
+      addImport('from sklearn.linear_model import LogisticRegression');
+      return ['LogisticRegression(max_iter=1000)', 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_decision_tree'] = function(block) {
+      const type = block.getFieldValue('TYPE');
+      const depth = block.getFieldValue('DEPTH') || 5;
+      if (type === 'Classifier') {
+        addImport('from sklearn.tree import DecisionTreeClassifier');
+        return [`DecisionTreeClassifier(max_depth=${depth}, random_state=42)`, 0];
+      } else {
+        addImport('from sklearn.tree import DecisionTreeRegressor');
+        return [`DecisionTreeRegressor(max_depth=${depth}, random_state=42)`, 0];
+      }
+    };
+
+    pythonGenerator.forBlock['sklearn_random_forest'] = function(block) {
+      const type = block.getFieldValue('TYPE');
+      const trees = block.getFieldValue('TREES') || 100;
+      if (type === 'Classifier') {
+        addImport('from sklearn.ensemble import RandomForestClassifier');
+        return [`RandomForestClassifier(n_estimators=${trees}, random_state=42)`, 0];
+      } else {
+        addImport('from sklearn.ensemble import RandomForestRegressor');
+        return [`RandomForestRegressor(n_estimators=${trees}, random_state=42)`, 0];
+      }
+    };
+
+    pythonGenerator.forBlock['sklearn_svm'] = function(block) {
+      const type = block.getFieldValue('TYPE');
+      const kernel = block.getFieldValue('KERNEL');
+      addImport(`from sklearn.svm import ${type}`);
+      return [`${type}(kernel="${kernel}")`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_knn'] = function(block) {
+      const type = block.getFieldValue('TYPE');
+      const k = block.getFieldValue('K') || 5;
+      if (type === 'Classifier') {
+        addImport('from sklearn.neighbors import KNeighborsClassifier');
+        return [`KNeighborsClassifier(n_neighbors=${k})`, 0];
+      } else {
+        addImport('from sklearn.neighbors import KNeighborsRegressor');
+        return [`KNeighborsRegressor(n_neighbors=${k})`, 0];
+      }
+    };
+
+    pythonGenerator.forBlock['sklearn_kmeans'] = function(block) {
+      addImport('from sklearn.cluster import KMeans');
+      const k = block.getFieldValue('K') || 3;
+      return [`KMeans(n_clusters=${k}, random_state=42)`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_pca'] = function(block) {
+      addImport('from sklearn.decomposition import PCA');
+      const n = block.getFieldValue('N') || 2;
+      return [`PCA(n_components=${n})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_model_var'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'model';
+      return [v, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_set_model'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'model';
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'None';
+      return `${v} = ${val}\n`;
+    };
+
+    pythonGenerator.forBlock['sklearn_fit'] = function(block) {
+      const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'model';
+      const x = pythonGenerator.valueToCode(block, 'X', 0) || 'X_train';
+      const y = pythonGenerator.valueToCode(block, 'Y', 0) || 'y_train';
+      return [`${model}.fit(${x}, ${y})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_predict'] = function(block) {
+      const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'model';
+      const x = pythonGenerator.valueToCode(block, 'X', 0) || 'X_test';
+      return [`${model}.predict(${x})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_score'] = function(block) {
+      const model = pythonGenerator.valueToCode(block, 'MODEL', 0) || 'model';
+      const x = pythonGenerator.valueToCode(block, 'X', 0) || 'X_test';
+      const y = pythonGenerator.valueToCode(block, 'Y', 0) || 'y_test';
+      return [`${model}.score(${x}, ${y})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_accuracy'] = function(block) {
+      addImport('from sklearn.metrics import accuracy_score');
+      const t = pythonGenerator.valueToCode(block, 'TRUE', 0) || 'y_true';
+      const p = pythonGenerator.valueToCode(block, 'PRED', 0) || 'y_pred';
+      return [`accuracy_score(${t}, ${p})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_mse'] = function(block) {
+      addImport('from sklearn.metrics import mean_squared_error');
+      const t = pythonGenerator.valueToCode(block, 'TRUE', 0) || 'y_true';
+      const p = pythonGenerator.valueToCode(block, 'PRED', 0) || 'y_pred';
+      return [`mean_squared_error(${t}, ${p})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_r2'] = function(block) {
+      addImport('from sklearn.metrics import r2_score');
+      const t = pythonGenerator.valueToCode(block, 'TRUE', 0) || 'y_true';
+      const p = pythonGenerator.valueToCode(block, 'PRED', 0) || 'y_pred';
+      return [`r2_score(${t}, ${p})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_confusion_matrix'] = function(block) {
+      addImport('from sklearn.metrics import confusion_matrix');
+      const t = pythonGenerator.valueToCode(block, 'TRUE', 0) || 'y_true';
+      const p = pythonGenerator.valueToCode(block, 'PRED', 0) || 'y_pred';
+      return [`confusion_matrix(${t}, ${p})`, 0];
+    };
+
+    pythonGenerator.forBlock['sklearn_classification_report'] = function(block) {
+      addImport('from sklearn.metrics import classification_report');
+      const t = pythonGenerator.valueToCode(block, 'TRUE', 0) || 'y_true';
+      const p = pythonGenerator.valueToCode(block, 'PRED', 0) || 'y_pred';
+      return [`classification_report(${t}, ${p})`, 0];
+    };
+
+    // Common generators
+    pythonGenerator.forBlock['text_value'] = function(block) {
+      const text = block.getFieldValue('TEXT');
+      return [`"${text}"`, 0];
+    };
+
+    pythonGenerator.forBlock['number_value'] = function(block) {
+      const num = block.getFieldValue('NUM');
+      return [String(num), 0];
+    };
+
+    pythonGenerator.forBlock['array_create'] = function(block) {
+      const items = block.getFieldValue('ITEMS');
+      const arr = items.split(',').map(s => `"${s.trim()}"`).join(', ');
+      return [`[${arr}]`, 0];
+    };
+
+    pythonGenerator.forBlock['print_value'] = function(block) {
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || '""';
+      return `print(${val})\n`;
+    };
+
+    pythonGenerator.forBlock['var_set'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'x';
+      const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'None';
+      return `${v} = ${val}\n`;
+    };
+
+    pythonGenerator.forBlock['var_get'] = function(block) {
+      const v = block.getFieldValue('VAR') || 'x';
+      return [v, 0];
+    };
+
+    pythonGenerator.forBlock['comment'] = function(block) {
+      const text = block.getFieldValue('TEXT');
+      return `# ${text}\n`;
+    };
+
+    function generateCode() {
+      imports.clear();
+      const code = pythonGenerator.workspaceToCode(state.workspace);
+      const importStr = Array.from(imports).sort().join('\n');
+      return importStr ? importStr + '\n\n' + code : code;
+    }
+
+    // ============================================
+    // Toolbox
+    // ============================================
+    const toolbox = {
+      kind: 'categoryToolbox',
+      contents: [
+        {
+          kind: 'category', name: 'Data Loading', colour: PANDAS_COLOR,
+          contents: [
+            { kind: 'block', type: 'pandas_read_csv' },
+            { kind: 'block', type: 'pandas_dataframe_var' },
+            { kind: 'block', type: 'pandas_set_dataframe' }
+          ]
+        },
+        {
+          kind: 'category', name: 'DataFrame Info', colour: PANDAS_COLOR,
+          contents: [
+            { kind: 'block', type: 'pandas_head' },
+            { kind: 'block', type: 'pandas_tail' },
+            { kind: 'block', type: 'pandas_describe' },
+            { kind: 'block', type: 'pandas_shape' },
+            { kind: 'block', type: 'pandas_columns' },
+            { kind: 'block', type: 'pandas_corr' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Columns', colour: '#E67300',
+          contents: [
+            { kind: 'block', type: 'pandas_select_column' },
+            { kind: 'block', type: 'pandas_select_columns' },
+            { kind: 'block', type: 'pandas_drop_columns' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Clean & Filter', colour: '#E68A00',
+          contents: [
+            { kind: 'block', type: 'pandas_dropna' },
+            { kind: 'block', type: 'pandas_fillna' },
+            { kind: 'block', type: 'pandas_filter' },
+            { kind: 'block', type: 'pandas_sort' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Aggregate', colour: '#E6A000',
+          contents: [
+            { kind: 'block', type: 'pandas_groupby' },
+            { kind: 'block', type: 'pandas_agg' },
+            { kind: 'block', type: 'pandas_value_counts' },
+            { kind: 'block', type: 'pandas_merge' }
+          ]
+        },
+        { kind: 'sep' },
+        {
+          kind: 'category', name: 'Split Data', colour: SKLEARN_COLOR,
+          contents: [
+            { kind: 'block', type: 'sklearn_train_test_split' },
+            { kind: 'block', type: 'sklearn_get_split' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Preprocessing', colour: PREPROCESS_COLOR,
+          contents: [
+            { kind: 'block', type: 'sklearn_standard_scaler' },
+            { kind: 'block', type: 'sklearn_minmax_scaler' },
+            { kind: 'block', type: 'sklearn_label_encoder' },
+            { kind: 'block', type: 'sklearn_pca' },
+            { kind: 'block', type: 'sklearn_fit_transform' },
+            { kind: 'block', type: 'sklearn_transform' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Models', colour: SKLEARN_COLOR,
+          contents: [
+            { kind: 'block', type: 'sklearn_linear_regression' },
+            { kind: 'block', type: 'sklearn_logistic_regression' },
+            { kind: 'block', type: 'sklearn_decision_tree' },
+            { kind: 'block', type: 'sklearn_random_forest' },
+            { kind: 'block', type: 'sklearn_svm' },
+            { kind: 'block', type: 'sklearn_knn' },
+            { kind: 'block', type: 'sklearn_kmeans' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Train & Predict', colour: '#EC407A',
+          contents: [
+            { kind: 'block', type: 'sklearn_model_var' },
+            { kind: 'block', type: 'sklearn_set_model' },
+            { kind: 'block', type: 'sklearn_fit' },
+            { kind: 'block', type: 'sklearn_predict' },
+            { kind: 'block', type: 'sklearn_score' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Metrics', colour: METRICS_COLOR,
+          contents: [
+            { kind: 'block', type: 'sklearn_accuracy' },
+            { kind: 'block', type: 'sklearn_mse' },
+            { kind: 'block', type: 'sklearn_r2' },
+            { kind: 'block', type: 'sklearn_confusion_matrix' },
+            { kind: 'block', type: 'sklearn_classification_report' }
+          ]
+        },
+        { kind: 'sep' },
+        {
+          kind: 'category', name: 'Values', colour: VALUES_COLOR,
+          contents: [
+            { kind: 'block', type: 'text_value' },
+            { kind: 'block', type: 'number_value' },
+            { kind: 'block', type: 'array_create' }
+          ]
+        },
+        {
+          kind: 'category', name: 'Variables', colour: '#8D6E63',
+          contents: [
+            { kind: 'block', type: 'var_set' },
+            { kind: 'block', type: 'var_get' },
+            { kind: 'block', type: 'print_value' },
+            { kind: 'block', type: 'comment' }
+          ]
+        }
+      ]
+    };
+
+    // ============================================
+    // Example Workspaces
+    // ============================================
+    const examples = {
+      explore: {
+        blocks: {
+          languageVersion: 0,
+          blocks: [
+            {
+              type: 'comment',
+              fields: { TEXT: 'Load and explore a sample dataset' },
+              next: {
+                block: {
+                  type: 'pandas_set_dataframe',
+                  fields: { VAR: { name: 'df' } },
+                  inputs: {
+                    VALUE: {
+                      block: {
+                        type: 'pandas_read_csv',
+                        inputs: {
+                          PATH: { block: { type: 'text_value', fields: { TEXT: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv' } } }
+                        }
+                      }
+                    }
+                  },
+                  next: {
+                    block: {
+                      type: 'print_value',
+                      inputs: {
+                        VALUE: {
+                          block: {
+                            type: 'pandas_head',
+                            fields: { N: 5 },
+                            inputs: { DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } } }
+                          }
+                        }
+                      },
+                      next: {
+                        block: {
+                          type: 'print_value',
+                          inputs: {
+                            VALUE: {
+                              block: {
+                                type: 'pandas_describe',
+                                inputs: { DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } } }
+                              }
+                            }
+                          },
+                          next: {
+                            block: {
+                              type: 'print_value',
+                              inputs: {
+                                VALUE: {
+                                  block: {
+                                    type: 'pandas_shape',
+                                    inputs: { DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } } }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      preprocess: {
+        blocks: {
+          languageVersion: 0,
+          blocks: [
+            {
+              type: 'comment',
+              fields: { TEXT: 'Data preprocessing pipeline' },
+              next: {
+                block: {
+                  type: 'pandas_set_dataframe',
+                  fields: { VAR: { name: 'df' } },
+                  inputs: {
+                    VALUE: {
+                      block: {
+                        type: 'pandas_read_csv',
+                        inputs: {
+                          PATH: { block: { type: 'text_value', fields: { TEXT: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv' } } }
+                        }
+                      }
+                    }
+                  },
+                  next: {
+                    block: {
+                      type: 'comment',
+                      fields: { TEXT: 'Handle missing values' },
+                      next: {
+                        block: {
+                          type: 'pandas_set_dataframe',
+                          fields: { VAR: { name: 'df' } },
+                          inputs: {
+                            VALUE: {
+                              block: {
+                                type: 'pandas_dropna',
+                                inputs: { DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } } }
+                              }
+                            }
+                          },
+                          next: {
+                            block: {
+                              type: 'comment',
+                              fields: { TEXT: 'Select features and scale' },
+                              next: {
+                                block: {
+                                  type: 'var_set',
+                                  fields: { VAR: { name: 'X' } },
+                                  inputs: {
+                                    VALUE: {
+                                      block: {
+                                        type: 'pandas_select_columns',
+                                        inputs: {
+                                          COLS: { block: { type: 'array_create', fields: { ITEMS: 'sepal_length, sepal_width, petal_length, petal_width' } } },
+                                          DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  next: {
+                                    block: {
+                                      type: 'sklearn_set_model',
+                                      fields: { VAR: { name: 'scaler' } },
+                                      inputs: { VALUE: { block: { type: 'sklearn_standard_scaler' } } },
+                                      next: {
+                                        block: {
+                                          type: 'var_set',
+                                          fields: { VAR: { name: 'X_scaled' } },
+                                          inputs: {
+                                            VALUE: {
+                                              block: {
+                                                type: 'sklearn_fit_transform',
+                                                inputs: {
+                                                  DATA: { block: { type: 'var_get', fields: { VAR: { name: 'X' } } } },
+                                                  SCALER: { block: { type: 'sklearn_model_var', fields: { VAR: { name: 'scaler' } } } }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          next: {
+                                            block: {
+                                              type: 'print_value',
+                                              inputs: { VALUE: { block: { type: 'var_get', fields: { VAR: { name: 'X_scaled' } } } } }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      classification: {
+        blocks: {
+          languageVersion: 0,
+          blocks: [
+            {
+              type: 'comment',
+              fields: { TEXT: 'Classification pipeline with Random Forest' },
+              next: {
+                block: {
+                  type: 'pandas_set_dataframe',
+                  fields: { VAR: { name: 'df' } },
+                  inputs: {
+                    VALUE: {
+                      block: {
+                        type: 'pandas_read_csv',
+                        inputs: {
+                          PATH: { block: { type: 'text_value', fields: { TEXT: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv' } } }
+                        }
+                      }
+                    }
+                  },
+                  next: {
+                    block: {
+                      type: 'var_set',
+                      fields: { VAR: { name: 'X' } },
+                      inputs: {
+                        VALUE: {
+                          block: {
+                            type: 'pandas_select_columns',
+                            inputs: {
+                              COLS: { block: { type: 'array_create', fields: { ITEMS: 'sepal_length, sepal_width, petal_length, petal_width' } } },
+                              DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } }
+                            }
+                          }
+                        }
+                      },
+                      next: {
+                        block: {
+                          type: 'var_set',
+                          fields: { VAR: { name: 'y' } },
+                          inputs: {
+                            VALUE: {
+                              block: {
+                                type: 'pandas_select_column',
+                                inputs: {
+                                  COL: { block: { type: 'text_value', fields: { TEXT: 'species' } } },
+                                  DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } }
+                                }
+                              }
+                            }
+                          },
+                          next: {
+                            block: {
+                              type: 'var_set',
+                              fields: { VAR: { name: 'split_data' } },
+                              inputs: {
+                                VALUE: {
+                                  block: {
+                                    type: 'sklearn_train_test_split',
+                                    fields: { SIZE: 0.2 },
+                                    inputs: {
+                                      X: { block: { type: 'var_get', fields: { VAR: { name: 'X' } } } },
+                                      Y: { block: { type: 'var_get', fields: { VAR: { name: 'y' } } } }
+                                    }
+                                  }
+                                }
+                              },
+                              next: {
+                                block: {
+                                  type: 'sklearn_set_model',
+                                  fields: { VAR: { name: 'model' } },
+                                  inputs: { VALUE: { block: { type: 'sklearn_random_forest', fields: { TYPE: 'Classifier', TREES: 100 } } } },
+                                  next: {
+                                    block: {
+                                      type: 'sklearn_set_model',
+                                      fields: { VAR: { name: 'model' } },
+                                      inputs: {
+                                        VALUE: {
+                                          block: {
+                                            type: 'sklearn_fit',
+                                            inputs: {
+                                              MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: { name: 'model' } } } },
+                                              X: { block: { type: 'sklearn_get_split', fields: { PART: '0' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } },
+                                              Y: { block: { type: 'sklearn_get_split', fields: { PART: '2' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      next: {
+                                        block: {
+                                          type: 'var_set',
+                                          fields: { VAR: { name: 'y_pred' } },
+                                          inputs: {
+                                            VALUE: {
+                                              block: {
+                                                type: 'sklearn_predict',
+                                                inputs: {
+                                                  MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: { name: 'model' } } } },
+                                                  X: { block: { type: 'sklearn_get_split', fields: { PART: '1' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          next: {
+                                            block: {
+                                              type: 'print_value',
+                                              inputs: {
+                                                VALUE: {
+                                                  block: {
+                                                    type: 'sklearn_accuracy',
+                                                    inputs: {
+                                                      TRUE: { block: { type: 'sklearn_get_split', fields: { PART: '3' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } },
+                                                      PRED: { block: { type: 'var_get', fields: { VAR: { name: 'y_pred' } } } }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      regression: {
+        blocks: {
+          languageVersion: 0,
+          blocks: [
+            {
+              type: 'comment',
+              fields: { TEXT: 'Regression pipeline with Linear Regression' },
+              next: {
+                block: {
+                  type: 'pandas_set_dataframe',
+                  fields: { VAR: { name: 'df' } },
+                  inputs: {
+                    VALUE: {
+                      block: {
+                        type: 'pandas_read_csv',
+                        inputs: {
+                          PATH: { block: { type: 'text_value', fields: { TEXT: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv' } } }
+                        }
+                      }
+                    }
+                  },
+                  next: {
+                    block: {
+                      type: 'var_set',
+                      fields: { VAR: { name: 'X' } },
+                      inputs: {
+                        VALUE: {
+                          block: {
+                            type: 'pandas_select_columns',
+                            inputs: {
+                              COLS: { block: { type: 'array_create', fields: { ITEMS: 'total_bill, size' } } },
+                              DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } }
+                            }
+                          }
+                        }
+                      },
+                      next: {
+                        block: {
+                          type: 'var_set',
+                          fields: { VAR: { name: 'y' } },
+                          inputs: {
+                            VALUE: {
+                              block: {
+                                type: 'pandas_select_column',
+                                inputs: {
+                                  COL: { block: { type: 'text_value', fields: { TEXT: 'tip' } } },
+                                  DF: { block: { type: 'pandas_dataframe_var', fields: { VAR: { name: 'df' } } } }
+                                }
+                              }
+                            }
+                          },
+                          next: {
+                            block: {
+                              type: 'var_set',
+                              fields: { VAR: { name: 'split_data' } },
+                              inputs: {
+                                VALUE: {
+                                  block: {
+                                    type: 'sklearn_train_test_split',
+                                    fields: { SIZE: 0.2 },
+                                    inputs: {
+                                      X: { block: { type: 'var_get', fields: { VAR: { name: 'X' } } } },
+                                      Y: { block: { type: 'var_get', fields: { VAR: { name: 'y' } } } }
+                                    }
+                                  }
+                                }
+                              },
+                              next: {
+                                block: {
+                                  type: 'sklearn_set_model',
+                                  fields: { VAR: { name: 'model' } },
+                                  inputs: { VALUE: { block: { type: 'sklearn_linear_regression' } } },
+                                  next: {
+                                    block: {
+                                      type: 'sklearn_set_model',
+                                      fields: { VAR: { name: 'model' } },
+                                      inputs: {
+                                        VALUE: {
+                                          block: {
+                                            type: 'sklearn_fit',
+                                            inputs: {
+                                              MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: { name: 'model' } } } },
+                                              X: { block: { type: 'sklearn_get_split', fields: { PART: '0' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } },
+                                              Y: { block: { type: 'sklearn_get_split', fields: { PART: '2' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      next: {
+                                        block: {
+                                          type: 'var_set',
+                                          fields: { VAR: { name: 'y_pred' } },
+                                          inputs: {
+                                            VALUE: {
+                                              block: {
+                                                type: 'sklearn_predict',
+                                                inputs: {
+                                                  MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: { name: 'model' } } } },
+                                                  X: { block: { type: 'sklearn_get_split', fields: { PART: '1' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          next: {
+                                            block: {
+                                              type: 'print_value',
+                                              inputs: {
+                                                VALUE: {
+                                                  block: {
+                                                    type: 'sklearn_r2',
+                                                    inputs: {
+                                                      TRUE: { block: { type: 'sklearn_get_split', fields: { PART: '3' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: { name: 'split_data' } } } } } } },
+                                                      PRED: { block: { type: 'var_get', fields: { VAR: { name: 'y_pred' } } } }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    // ============================================
+    // UI Elements
+    // ============================================
+    const elements = {
+      loadingOverlay: document.getElementById('loadingOverlay'),
+      loadingText: document.getElementById('loadingText'),
+      loadingBar: document.getElementById('loadingBar'),
+      statusDot: document.getElementById('statusDot'),
+      statusText: document.getElementById('statusText'),
+      runBtn: document.getElementById('runBtn'),
+      exampleSelect: document.getElementById('exampleSelect'),
+      blocksTab: document.getElementById('blocksTab'),
+      codeTab: document.getElementById('codeTab'),
+      blocklyDiv: document.getElementById('blocklyDiv'),
+      codeEditor: document.getElementById('codeEditor'),
+      outputTab: document.getElementById('outputTab'),
+      codeViewTab: document.getElementById('codeViewTab'),
+      consoleOutput: document.getElementById('consoleOutput'),
+      codeOutput: document.getElementById('codeOutput'),
+      runInfo: document.getElementById('runInfo'),
+      copyCodeBtn: document.getElementById('copyCodeBtn'),
+      saveBtn: document.getElementById('saveBtn'),
+      loadBtn: document.getElementById('loadBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      saveModal: document.getElementById('saveModal'),
+      loadModal: document.getElementById('loadModal'),
+      saveData: document.getElementById('saveData'),
+      loadData: document.getElementById('loadData'),
+      copySaveBtn: document.getElementById('copySaveBtn'),
+      closeSaveModal: document.getElementById('closeSaveModal'),
+      cancelLoadBtn: document.getElementById('cancelLoadBtn'),
+      confirmLoadBtn: document.getElementById('confirmLoadBtn')
+    };
+
+    // ============================================
+    // Initialize Blockly
+    // ============================================
+    function initBlockly() {
+      state.workspace = Blockly.inject('blocklyDiv', {
+        toolbox,
+        grid: { spacing: 20, length: 3, colour: '#333', snap: true },
+        zoom: { controls: true, wheel: true, startScale: 1.0, maxScale: 3, minScale: 0.3 },
+        trashcan: true,
+        move: { scrollbars: true, drag: true, wheel: true },
+        theme: Blockly.Theme.defineTheme('dark', {
+          base: Blockly.Themes.Classic,
+          componentStyles: {
+            workspaceBackgroundColour: '#1a1a2e',
+            toolboxBackgroundColour: '#16213e',
+            toolboxForegroundColour: '#eee',
+            flyoutBackgroundColour: '#0f3460',
+            flyoutForegroundColour: '#eee',
+            flyoutOpacity: 1,
+            scrollbarColour: '#4a4a6a',
+            insertionMarkerColour: '#fff',
+            insertionMarkerOpacity: 0.3,
+            scrollbarOpacity: 0.6,
+            cursorColour: '#e94560'
+          }
+        })
+      });
+
+      state.workspace.addChangeListener(updateCode);
+    }
+
+    function updateCode() {
+      const code = generateCode();
+      elements.codeOutput.textContent = code || '# No blocks yet...';
+      elements.codeEditor.value = code;
+    }
+
+    // ============================================
+    // Pyodide Initialization
+    // ============================================
+    async function initPyodide() {
+      try {
+        setLoadingProgress(10, 'Loading Pyodide runtime...');
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+        document.head.appendChild(script);
+
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+
+        setLoadingProgress(30, 'Initializing Python...');
+        state.pyodide = await loadPyodide();
+
+        setLoadingProgress(50, 'Installing pandas...');
+        await state.pyodide.loadPackage('pandas');
+
+        setLoadingProgress(70, 'Installing scikit-learn...');
+        await state.pyodide.loadPackage('scikit-learn');
+
+        setLoadingProgress(90, 'Finalizing...');
+        await state.pyodide.runPythonAsync(`
+import pandas as pd
+import numpy as np
+from io import StringIO
+import warnings
+warnings.filterwarnings('ignore')
+print("Pandamonium ready!")
+        `);
+
+        setLoadingProgress(100, 'Ready!');
+        state.pyodideReady = true;
+
+        elements.statusDot.classList.add('ready');
+        elements.statusText.textContent = 'Ready';
+        elements.runBtn.disabled = false;
+
+        setTimeout(() => {
+          elements.loadingOverlay.classList.add('hidden');
+        }, 500);
+
+      } catch (error) {
+        console.error('Pyodide init error:', error);
+        elements.statusDot.classList.add('error');
+        elements.statusText.textContent = 'Error';
+        elements.loadingText.textContent = 'Failed to load Python environment';
+        elements.loadingBar.style.background = '#e94560';
+      }
+    }
+
+    function setLoadingProgress(percent, text) {
+      elements.loadingBar.style.width = percent + '%';
+      elements.loadingText.textContent = text;
+    }
+
+    // ============================================
+    // Run Code
+    // ============================================
+    async function runCode() {
+      if (!state.pyodideReady || state.isRunning) return;
+
+      state.isRunning = true;
+      elements.runBtn.disabled = true;
+      elements.runInfo.textContent = 'Running...';
+      elements.consoleOutput.innerHTML = '';
+
+      const code = state.currentView === 'blocks' ? generateCode() : elements.codeEditor.value;
+
+      try {
+        state.pyodide.setStdout({
+          batched: (text) => {
+            elements.consoleOutput.innerHTML += text + '\n';
+          }
+        });
+
+        state.pyodide.setStderr({
+          batched: (text) => {
+            elements.consoleOutput.innerHTML += `<span class="output-error">${text}</span>\n`;
+          }
+        });
+
+        await state.pyodide.runPythonAsync(code);
+
+        elements.consoleOutput.innerHTML += '<span class="output-success">\n✓ Execution complete</span>';
+        elements.runInfo.textContent = 'Completed successfully';
+
+      } catch (error) {
+        elements.consoleOutput.innerHTML += `<span class="output-error">\n✗ Error: ${error.message}</span>`;
+        elements.runInfo.textContent = 'Execution failed';
+      }
+
+      state.isRunning = false;
+      elements.runBtn.disabled = false;
+
+      // Switch to output view
+      elements.outputTab.classList.add('active');
+      elements.codeViewTab.classList.remove('active');
+      elements.consoleOutput.style.display = 'block';
+      elements.codeOutput.style.display = 'none';
+    }
+
+    // ============================================
+    // Event Handlers
+    // ============================================
+    elements.runBtn.addEventListener('click', runCode);
+
+    elements.blocksTab.addEventListener('click', () => {
+      state.currentView = 'blocks';
+      elements.blocksTab.classList.add('active');
+      elements.codeTab.classList.remove('active');
+      elements.blocklyDiv.style.display = 'block';
+      elements.codeEditor.style.display = 'none';
+    });
+
+    elements.codeTab.addEventListener('click', () => {
+      state.currentView = 'code';
+      elements.codeTab.classList.add('active');
+      elements.blocksTab.classList.remove('active');
+      elements.blocklyDiv.style.display = 'none';
+      elements.codeEditor.style.display = 'block';
+    });
+
+    elements.outputTab.addEventListener('click', () => {
+      elements.outputTab.classList.add('active');
+      elements.codeViewTab.classList.remove('active');
+      elements.consoleOutput.style.display = 'block';
+      elements.codeOutput.style.display = 'none';
+    });
+
+    elements.codeViewTab.addEventListener('click', () => {
+      elements.codeViewTab.classList.add('active');
+      elements.outputTab.classList.remove('active');
+      elements.codeOutput.style.display = 'block';
+      elements.consoleOutput.style.display = 'none';
+    });
+
+    elements.exampleSelect.addEventListener('change', (e) => {
+      if (e.target.value && examples[e.target.value]) {
+        state.workspace.clear();
+        Blockly.serialization.workspaces.load(examples[e.target.value], state.workspace);
+        e.target.value = '';
+      }
+    });
+
+    elements.copyCodeBtn.addEventListener('click', () => {
+      const code = state.currentView === 'blocks' ? generateCode() : elements.codeEditor.value;
+      navigator.clipboard.writeText(code).then(() => {
+        elements.copyCodeBtn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          elements.copyCodeBtn.textContent = '📋 Copy Code';
+        }, 2000);
+      });
+    });
+
+    elements.saveBtn.addEventListener('click', () => {
+      const data = Blockly.serialization.workspaces.save(state.workspace);
+      elements.saveData.value = JSON.stringify(data, null, 2);
+      elements.saveModal.classList.add('show');
+    });
+
+    elements.copySaveBtn.addEventListener('click', () => {
+      elements.saveData.select();
+      navigator.clipboard.writeText(elements.saveData.value);
+      elements.copySaveBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        elements.copySaveBtn.textContent = 'Copy to Clipboard';
+      }, 2000);
+    });
+
+    elements.closeSaveModal.addEventListener('click', () => {
+      elements.saveModal.classList.remove('show');
+    });
+
+    elements.loadBtn.addEventListener('click', () => {
+      elements.loadData.value = '';
+      elements.loadModal.classList.add('show');
+    });
+
+    elements.cancelLoadBtn.addEventListener('click', () => {
+      elements.loadModal.classList.remove('show');
+    });
+
+    elements.confirmLoadBtn.addEventListener('click', () => {
+      try {
+        const data = JSON.parse(elements.loadData.value);
+        state.workspace.clear();
+        Blockly.serialization.workspaces.load(data, state.workspace);
+        elements.loadModal.classList.remove('show');
+      } catch (error) {
+        alert('Invalid workspace JSON');
+      }
+    });
+
+    elements.clearBtn.addEventListener('click', () => {
+      if (confirm('Clear all blocks?')) {
+        state.workspace.clear();
+      }
+    });
+
+    // Close modals on backdrop click
+    elements.saveModal.addEventListener('click', (e) => {
+      if (e.target === elements.saveModal) elements.saveModal.classList.remove('show');
+    });
+
+    elements.loadModal.addEventListener('click', (e) => {
+      if (e.target === elements.loadModal) elements.loadModal.classList.remove('show');
+    });
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+      Blockly.svgResize(state.workspace);
+    });
+
+    // ============================================
+    // Initialize
+    // ============================================
+    initBlockly();
+    initPyodide();
+  </script>
+</body>
+</html>

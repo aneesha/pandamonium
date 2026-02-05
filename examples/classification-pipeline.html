@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandamonium - Classification Pipeline</title>
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="../dist/pandamonium.umd.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 10px; color: #e94560; }
+    p { margin-bottom: 20px; color: #aaa; }
+    .container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 120px);
+    }
+    #blocklyDiv {
+      flex: 1;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .code-panel {
+      width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h3 { color: #4ecca3; margin-bottom: 10px; }
+    pre {
+      flex: 1;
+      background: #0d1117;
+      padding: 16px;
+      border-radius: 8px;
+      overflow: auto;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #00897B;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #00acc1; }
+  </style>
+</head>
+<body>
+  <h1>🐼 Classification Pipeline Example</h1>
+  <p>This example demonstrates a complete classification workflow using Random Forest.</p>
+
+  <div class="container">
+    <div id="blocklyDiv"></div>
+    <div class="code-panel">
+      <h3>Generated Python Code</h3>
+      <pre id="codeOutput">Loading example...</pre>
+      <div class="actions">
+        <button onclick="copyCode()">📋 Copy Code</button>
+        <button onclick="clearWorkspace()">🗑️ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pandamonium = new Pandamonium.Pandamonium({
+      container: document.getElementById('blocklyDiv')
+    });
+
+    pandamonium.onChange((code) => {
+      document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
+    });
+
+    // Classification pipeline example
+    const classificationExample = {
+      blocks: {
+        languageVersion: 0,
+        blocks: [
+          {
+            type: 'comment_block',
+            x: 50,
+            y: 30,
+            fields: { COMMENT: 'Classification Pipeline with Random Forest' },
+            next: {
+              block: {
+                type: 'pandas_set_dataframe',
+                fields: { VAR: 'df' },
+                inputs: {
+                  VALUE: {
+                    block: {
+                      type: 'pandas_read_csv',
+                      inputs: {
+                        PATH: { block: { type: 'text_value', fields: { TEXT: 'iris.csv' } } }
+                      }
+                    }
+                  }
+                },
+                next: {
+                  block: {
+                    type: 'comment_block',
+                    fields: { COMMENT: 'Prepare features and target' },
+                    next: {
+                      block: {
+                        type: 'var_set',
+                        fields: { VAR: 'X' },
+                        inputs: {
+                          VALUE: {
+                            block: {
+                              type: 'pandas_drop_columns',
+                              inputs: {
+                                COLUMNS: { block: { type: 'array_create_with', fields: { ITEMS: 'species' } } },
+                                DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                              }
+                            }
+                          }
+                        },
+                        next: {
+                          block: {
+                            type: 'var_set',
+                            fields: { VAR: 'y' },
+                            inputs: {
+                              VALUE: {
+                                block: {
+                                  type: 'pandas_select_column',
+                                  inputs: {
+                                    COLUMN: { block: { type: 'text_value', fields: { TEXT: 'species' } } },
+                                    DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
+                                  }
+                                }
+                              }
+                            },
+                            next: {
+                              block: {
+                                type: 'comment_block',
+                                fields: { COMMENT: 'Split data into train/test sets' },
+                                next: {
+                                  block: {
+                                    type: 'var_set',
+                                    fields: { VAR: 'split' },
+                                    inputs: {
+                                      VALUE: {
+                                        block: {
+                                          type: 'sklearn_train_test_split',
+                                          fields: { TEST_SIZE: 0.2, RANDOM_STATE: 42 },
+                                          inputs: {
+                                            X: { block: { type: 'var_get', fields: { VAR: 'X' } } },
+                                            Y: { block: { type: 'var_get', fields: { VAR: 'y' } } }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    next: {
+                                      block: {
+                                        type: 'comment_block',
+                                        fields: { COMMENT: 'Train Random Forest model' },
+                                        next: {
+                                          block: {
+                                            type: 'sklearn_set_model',
+                                            fields: { VAR: 'model' },
+                                            inputs: {
+                                              VALUE: {
+                                                block: {
+                                                  type: 'sklearn_random_forest_classifier',
+                                                  fields: { N_ESTIMATORS: 100, MAX_DEPTH: 5, RANDOM_STATE: 42 }
+                                                }
+                                              }
+                                            },
+                                            next: {
+                                              block: {
+                                                type: 'sklearn_set_model',
+                                                fields: { VAR: 'model' },
+                                                inputs: {
+                                                  VALUE: {
+                                                    block: {
+                                                      type: 'sklearn_fit',
+                                                      inputs: {
+                                                        MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
+                                                        X: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'X_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
+                                                        Y: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'y_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                next: {
+                                                  block: {
+                                                    type: 'comment_block',
+                                                    fields: { COMMENT: 'Make predictions and evaluate' },
+                                                    next: {
+                                                      block: {
+                                                        type: 'var_set',
+                                                        fields: { VAR: 'y_pred' },
+                                                        inputs: {
+                                                          VALUE: {
+                                                            block: {
+                                                              type: 'sklearn_predict',
+                                                              inputs: {
+                                                                MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
+                                                                X: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'X_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        next: {
+                                                          block: {
+                                                            type: 'pandas_print',
+                                                            inputs: {
+                                                              VALUE: {
+                                                                block: {
+                                                                  type: 'sklearn_accuracy_score',
+                                                                  inputs: {
+                                                                    Y_TRUE: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'y_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
+                                                                    Y_PRED: { block: { type: 'var_get', fields: { VAR: 'y_pred' } } }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    };
+
+    pandamonium.loadWorkspace(classificationExample);
+
+    function copyCode() {
+      const code = pandamonium.generateCode();
+      navigator.clipboard.writeText(code);
+      alert('Code copied to clipboard!');
+    }
+
+    function clearWorkspace() {
+      pandamonium.clearWorkspace();
+    }
+  </script>
+</body>
+</html>
