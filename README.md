@@ -4,13 +4,12 @@
 
 Pandamonium is a Blockly-based visual programming library that lets you build data science workflows by dragging and dropping blocks. It generates clean Python code that you can run with Pandas and Scikit-Learn.
 
-![Pandamonium Screenshot](https://via.placeholder.com/800x400?text=Pandamonium+Visual+Data+Science)
-
 ## Features
 
 - **Visual Block Editor** - Drag-and-drop interface powered by Blockly
-- **Pandas Blocks** - Data loading, manipulation, filtering, grouping, merging
-- **Scikit-Learn Blocks** - Preprocessing, classification, regression, clustering, metrics
+- **High-Level Blocks** - Simplified blocks that group related operations with built-in options
+- **Pandas Blocks** - Data loading, transformation, filtering, grouping, merging
+- **Scikit-Learn Blocks** - ML preparation, model creation, training, prediction, evaluation
 - **Python Code Generation** - Generates clean, runnable Python with proper imports
 - **Interactive Playground** - Built-in playground with Pyodide for live Python execution
 - **TypeScript Support** - Fully typed for great IDE support
@@ -112,102 +111,66 @@ const pandamonium = new Pandamonium(config: PandamoniumConfig);
 
 ## Available Blocks
 
-### Pandas - Data Loading
-- `read CSV` - Load CSV file into DataFrame
-- `read Excel` - Load Excel file into DataFrame
-- `read JSON` - Load JSON file into DataFrame
-- `create DataFrame` - Create DataFrame from dictionary
+Pandamonium uses high-level, self-contained blocks with built-in dropdowns and text inputs for configuration. This design reduces drag-and-drop complexity while maintaining flexibility.
 
-### Pandas - DataFrame Operations
-- `head` / `tail` - Get first/last n rows
-- `sample` - Random sample of rows
-- `shape` - Get DataFrame dimensions
-- `columns` - Get column names
-- `dtypes` - Get column data types
-- `describe` - Descriptive statistics
+### 📂 Load Data
 
-### Pandas - Column Operations
-- `select column` - Select single column as Series
-- `select columns` - Select multiple columns
-- `drop columns` - Remove columns
-- `rename columns` - Rename columns
+| Block | Description |
+|-------|-------------|
+| **Load Data** | Load CSV, Excel, JSON, or URL into a DataFrame. Includes file type dropdown and path input. |
+| **Preview Data** | View data: head, tail, describe, shape, columns, dtypes, info, sample. Count parameter included. |
 
-### Pandas - Filtering & Cleaning
-- `filter` - Filter rows by condition
-- `dropna` - Drop rows with null values
-- `fillna` - Fill null values
+### 🔧 Transform
 
-### Pandas - Aggregation
-- `groupby` - Group by columns
-- `aggregate` - Apply aggregation (sum, mean, count, etc.)
-- `value_counts` - Count unique values
-- `correlation` - Correlation matrix
+| Block | Description |
+|-------|-------------|
+| **Select Columns** | Keep or drop specific columns from DataFrame |
+| **Filter Rows** | Filter by condition: ==, !=, >, <, >=, <=, contains, is null, not null |
+| **Handle Missing** | Drop nulls, or fill with value/mean/median/mode/ffill/bfill |
+| **Sort Data** | Sort by column ascending or descending |
+| **Group & Summarize** | Group by column and calculate sum/mean/count/min/max/median/std |
+| **Merge Data** | Merge two DataFrames with inner/left/right/outer join |
 
-### Pandas - Transform
-- `sort values` - Sort by columns
-- `merge` - Merge DataFrames
-- `concat` - Concatenate DataFrames
-- `pivot table` - Create pivot table
-- `apply` - Apply function
+### 🎯 ML Prep
 
-### Scikit-Learn - Data Splitting
-- `train_test_split` - Split into train/test sets
-- `get train/test data` - Extract split parts
+| Block | Description |
+|-------|-------------|
+| **Prepare Features** | Extract features (X) and target (y) from DataFrame |
+| **Split Data** | Train/test split with configurable test size |
+| **Scale Features** | StandardScaler, MinMaxScaler, or RobustScaler |
 
-### Scikit-Learn - Preprocessing
-- `StandardScaler` - Standardize features
-- `MinMaxScaler` - Scale to range
-- `RobustScaler` - Outlier-robust scaling
-- `LabelEncoder` - Encode labels
-- `OneHotEncoder` - One-hot encoding
-- `PCA` - Dimensionality reduction
-- `fit_transform` / `transform` - Apply transformers
+### 🤖 Models
 
-### Scikit-Learn - Classification Models
-- `LogisticRegression`
-- `DecisionTreeClassifier`
-- `RandomForestClassifier`
-- `SVC` (Support Vector Classifier)
-- `KNeighborsClassifier`
-- `GaussianNB`
+| Block | Description |
+|-------|-------------|
+| **Create Model** | Choose from 8 model types with classifier/regressor task selection |
+| **Train Model** | Fit model on X_train, y_train |
+| **Predict** | Make predictions on X_test, X_train, or X |
+| **Grid Search** | Hyperparameter tuning with custom param grid and scoring metric |
+| **Cross Validate** | K-fold cross-validation with mean ± std output |
 
-### Scikit-Learn - Regression Models
-- `LinearRegression`
-- `Ridge`
-- `Lasso`
-- `DecisionTreeRegressor`
-- `RandomForestRegressor`
-- `SVR`
+#### Model Types
+- Linear Regression
+- Logistic Regression
+- Decision Tree (Classifier/Regressor)
+- Random Forest (Classifier/Regressor)
+- KNN (Classifier/Regressor)
+- SVM (SVC/SVR)
+- Naive Bayes (GaussianNB)
+- Gradient Boosting (Classifier/Regressor)
 
-### Scikit-Learn - Clustering
-- `KMeans`
-- `DBSCAN`
+### 📊 Evaluate
 
-### Scikit-Learn - Model Operations
-- `fit` - Train model
-- `predict` - Make predictions
-- `predict_proba` - Predict probabilities
-- `score` - Calculate score
-- `cross_val_score` - Cross-validation
+| Block | Description |
+|-------|-------------|
+| **Evaluate** | Calculate metrics: Accuracy, Precision, Recall, F1, Confusion Matrix, Classification Report, MSE, RMSE, MAE, R² |
 
-### Scikit-Learn - Metrics
-- `accuracy_score`
-- `precision_score`
-- `recall_score`
-- `f1_score`
-- `confusion_matrix`
-- `classification_report`
-- `mean_squared_error`
-- `r2_score`
-- `mean_absolute_error`
+### 📤 Output
 
-### Common Blocks
-- Text, Number, Boolean values
-- Arrays and Dictionaries
-- Variables (set/get)
-- Lambda functions
-- Comments
-- Print
+| Block | Description |
+|-------|-------------|
+| **Output** | Print data or save as CSV/Excel |
+| **Comment** | Add Python comment to code |
 
 ## Examples
 
@@ -216,8 +179,8 @@ The `examples/` folder contains ready-to-use examples:
 - **basic-usage.html** - Simple data loading and viewing
 - **data-exploration.html** - Exploratory data analysis workflow
 - **classification-pipeline.html** - Complete classification with Random Forest
-- **regression-pipeline.html** - Regression with feature scaling
-- **clustering.html** - K-Means clustering with PCA
+- **regression-pipeline.html** - Regression with Linear Regression
+- **data-cleaning.html** - Data cleaning and transformation
 
 ## Playground
 
@@ -226,8 +189,8 @@ The `playground/` folder contains an interactive playground with:
 - Full Blockly editor
 - Live Python execution via Pyodide
 - Code/Blocks view toggle
-- Pre-built example workflows
-- Save/Load workspace
+- Pre-built example workflows (Explore, Clean, Classify, Regress)
+- Dark theme UI
 
 To use the playground:
 
@@ -264,9 +227,9 @@ npm run lint
 pandamonium/
 ├── src/
 │   ├── blocks/
-│   │   ├── pandas.ts      # Pandas block definitions
-│   │   ├── sklearn.ts     # Scikit-Learn block definitions
-│   │   └── common.ts      # Common utility blocks
+│   │   ├── pandas.ts      # Data loading & transform blocks
+│   │   ├── sklearn.ts     # ML prep, model, evaluate blocks
+│   │   └── common.ts      # Output & comment blocks
 │   ├── generators/
 │   │   └── python.ts      # Python code generator
 │   ├── core/
@@ -276,7 +239,7 @@ pandamonium/
 │   └── index.ts           # Library entry point
 ├── dist/                   # Built library files
 ├── examples/               # Example HTML files
-├── playground/             # Interactive playground
+├── playground/             # Interactive playground with Pyodide
 ├── tests/                  # Test files
 └── package.json
 ```
