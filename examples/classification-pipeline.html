@@ -28,7 +28,7 @@
       overflow: hidden;
     }
     .code-panel {
-      width: 450px;
+      width: 500px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -63,7 +63,7 @@
 </head>
 <body>
   <h1>🐼 Classification Pipeline Example</h1>
-  <p>This example demonstrates a complete classification workflow using Random Forest.</p>
+  <p>This example demonstrates a complete classification workflow using the simplified high-level blocks.</p>
 
   <div class="container">
     <div id="blocklyDiv"></div>
@@ -86,175 +86,40 @@
       document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
     });
 
-    // Classification pipeline example
+    // Classification pipeline example with new high-level blocks
     const classificationExample = {
       blocks: {
         languageVersion: 0,
-        blocks: [
-          {
-            type: 'comment_block',
-            x: 50,
-            y: 30,
-            fields: { COMMENT: 'Classification Pipeline with Random Forest' },
-            next: {
-              block: {
-                type: 'pandas_set_dataframe',
-                fields: { VAR: 'df' },
-                inputs: {
-                  VALUE: {
-                    block: {
-                      type: 'pandas_read_csv',
-                      inputs: {
-                        PATH: { block: { type: 'text_value', fields: { TEXT: 'iris.csv' } } }
-                      }
-                    }
-                  }
-                },
-                next: {
-                  block: {
-                    type: 'comment_block',
-                    fields: { COMMENT: 'Prepare features and target' },
-                    next: {
-                      block: {
-                        type: 'var_set',
-                        fields: { VAR: 'X' },
-                        inputs: {
-                          VALUE: {
-                            block: {
-                              type: 'pandas_drop_columns',
-                              inputs: {
-                                COLUMNS: { block: { type: 'array_create_with', fields: { ITEMS: 'species' } } },
-                                DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
-                              }
-                            }
-                          }
-                        },
-                        next: {
-                          block: {
-                            type: 'var_set',
-                            fields: { VAR: 'y' },
-                            inputs: {
-                              VALUE: {
-                                block: {
-                                  type: 'pandas_select_column',
-                                  inputs: {
-                                    COLUMN: { block: { type: 'text_value', fields: { TEXT: 'species' } } },
-                                    DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
-                                  }
-                                }
-                              }
-                            },
-                            next: {
-                              block: {
-                                type: 'comment_block',
-                                fields: { COMMENT: 'Split data into train/test sets' },
-                                next: {
-                                  block: {
-                                    type: 'var_set',
-                                    fields: { VAR: 'split' },
-                                    inputs: {
-                                      VALUE: {
-                                        block: {
-                                          type: 'sklearn_train_test_split',
-                                          fields: { TEST_SIZE: 0.2, RANDOM_STATE: 42 },
-                                          inputs: {
-                                            X: { block: { type: 'var_get', fields: { VAR: 'X' } } },
-                                            Y: { block: { type: 'var_get', fields: { VAR: 'y' } } }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    next: {
-                                      block: {
-                                        type: 'comment_block',
-                                        fields: { COMMENT: 'Train Random Forest model' },
-                                        next: {
-                                          block: {
-                                            type: 'sklearn_set_model',
-                                            fields: { VAR: 'model' },
-                                            inputs: {
-                                              VALUE: {
-                                                block: {
-                                                  type: 'sklearn_random_forest_classifier',
-                                                  fields: { N_ESTIMATORS: 100, MAX_DEPTH: 5, RANDOM_STATE: 42 }
-                                                }
-                                              }
-                                            },
-                                            next: {
-                                              block: {
-                                                type: 'sklearn_set_model',
-                                                fields: { VAR: 'model' },
-                                                inputs: {
-                                                  VALUE: {
-                                                    block: {
-                                                      type: 'sklearn_fit',
-                                                      inputs: {
-                                                        MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
-                                                        X: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'X_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
-                                                        Y: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'y_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } }
-                                                      }
-                                                    }
-                                                  }
-                                                },
-                                                next: {
-                                                  block: {
-                                                    type: 'comment_block',
-                                                    fields: { COMMENT: 'Make predictions and evaluate' },
-                                                    next: {
-                                                      block: {
-                                                        type: 'var_set',
-                                                        fields: { VAR: 'y_pred' },
-                                                        inputs: {
-                                                          VALUE: {
-                                                            block: {
-                                                              type: 'sklearn_predict',
-                                                              inputs: {
-                                                                MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
-                                                                X: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'X_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } }
-                                                              }
-                                                            }
-                                                          }
-                                                        },
-                                                        next: {
-                                                          block: {
-                                                            type: 'pandas_print',
-                                                            inputs: {
-                                                              VALUE: {
-                                                                block: {
-                                                                  type: 'sklearn_accuracy_score',
-                                                                  inputs: {
-                                                                    Y_TRUE: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'y_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
-                                                                    Y_PRED: { block: { type: 'var_get', fields: { VAR: 'y_pred' } } }
-                                                                  }
-                                                                }
-                                                              }
-                                                            }
-                                                          }
-                                                        }
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
+        blocks: [{
+          type: 'comment', x: 50, y: 30, fields: { TEXT: 'Classification: Iris dataset' },
+          next: { block: {
+            type: 'load_data', fields: { TYPE: 'url', VAR: 'df', PATH: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv' },
+            next: { block: {
+              type: 'prepare_features', fields: { VAR: 'df', FEATURES: 'sepal_length, sepal_width, petal_length, petal_width', TARGET: 'species', X_VAR: 'X', Y_VAR: 'y' },
+              next: { block: {
+                type: 'split_data', fields: { X_VAR: 'X', Y_VAR: 'y', TEST_SIZE: 0.2 },
+                next: { block: {
+                  type: 'scale_features', fields: { SCALER: 'standard' },
+                  next: { block: {
+                    type: 'create_model', fields: { MODEL_TYPE: 'random_forest', MODEL_VAR: 'model', TASK: 'classifier' },
+                    next: { block: {
+                      type: 'train_model', fields: { MODEL_VAR: 'model' },
+                      next: { block: {
+                        type: 'predict', fields: { MODEL_VAR: 'model', DATA: 'X_test', PRED_VAR: 'y_pred' },
+                        next: { block: {
+                          type: 'evaluate', fields: { METRIC: 'accuracy', Y_TRUE: 'y_test', Y_PRED: 'y_pred' },
+                          next: { block: {
+                            type: 'evaluate', fields: { METRIC: 'class_report', Y_TRUE: 'y_test', Y_PRED: 'y_pred' }
+                          }}
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }]
       }
     };
 

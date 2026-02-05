@@ -28,7 +28,7 @@
       overflow: hidden;
     }
     .code-panel {
-      width: 450px;
+      width: 500px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -63,7 +63,7 @@
 </head>
 <body>
   <h1>🐼 Regression Pipeline Example</h1>
-  <p>This example demonstrates a regression workflow with feature scaling and Linear Regression.</p>
+  <p>This example demonstrates a regression workflow using the simplified high-level blocks.</p>
 
   <div class="container">
     <div id="blocklyDiv"></div>
@@ -86,235 +86,37 @@
       document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
     });
 
-    // Regression pipeline example
+    // Regression pipeline example with new high-level blocks
     const regressionExample = {
       blocks: {
         languageVersion: 0,
-        blocks: [
-          {
-            type: 'comment_block',
-            x: 50,
-            y: 30,
-            fields: { COMMENT: 'Regression Pipeline with Feature Scaling' },
-            next: {
-              block: {
-                type: 'pandas_set_dataframe',
-                fields: { VAR: 'df' },
-                inputs: {
-                  VALUE: {
-                    block: {
-                      type: 'pandas_read_csv',
-                      inputs: {
-                        PATH: { block: { type: 'text_value', fields: { TEXT: 'housing.csv' } } }
-                      }
-                    }
-                  }
-                },
-                next: {
-                  block: {
-                    type: 'comment_block',
-                    fields: { COMMENT: 'Clean data - drop missing values' },
-                    next: {
-                      block: {
-                        type: 'pandas_set_dataframe',
-                        fields: { VAR: 'df' },
-                        inputs: {
-                          VALUE: {
-                            block: {
-                              type: 'pandas_dropna',
-                              inputs: {
-                                DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
-                              }
-                            }
-                          }
-                        },
-                        next: {
-                          block: {
-                            type: 'comment_block',
-                            fields: { COMMENT: 'Select features and target' },
-                            next: {
-                              block: {
-                                type: 'var_set',
-                                fields: { VAR: 'X' },
-                                inputs: {
-                                  VALUE: {
-                                    block: {
-                                      type: 'pandas_select_columns',
-                                      inputs: {
-                                        COLUMNS: { block: { type: 'array_create_with', fields: { ITEMS: 'size, bedrooms, age' } } },
-                                        DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
-                                      }
-                                    }
-                                  }
-                                },
-                                next: {
-                                  block: {
-                                    type: 'var_set',
-                                    fields: { VAR: 'y' },
-                                    inputs: {
-                                      VALUE: {
-                                        block: {
-                                          type: 'pandas_select_column',
-                                          inputs: {
-                                            COLUMN: { block: { type: 'text_value', fields: { TEXT: 'price' } } },
-                                            DATAFRAME: { block: { type: 'pandas_dataframe_var', fields: { VAR: 'df' } } }
-                                          }
-                                        }
-                                      }
-                                    },
-                                    next: {
-                                      block: {
-                                        type: 'comment_block',
-                                        fields: { COMMENT: 'Split and scale data' },
-                                        next: {
-                                          block: {
-                                            type: 'var_set',
-                                            fields: { VAR: 'split' },
-                                            inputs: {
-                                              VALUE: {
-                                                block: {
-                                                  type: 'sklearn_train_test_split',
-                                                  fields: { TEST_SIZE: 0.2, RANDOM_STATE: 42 },
-                                                  inputs: {
-                                                    X: { block: { type: 'var_get', fields: { VAR: 'X' } } },
-                                                    Y: { block: { type: 'var_get', fields: { VAR: 'y' } } }
-                                                  }
-                                                }
-                                              }
-                                            },
-                                            next: {
-                                              block: {
-                                                type: 'sklearn_set_model',
-                                                fields: { VAR: 'scaler' },
-                                                inputs: {
-                                                  VALUE: { block: { type: 'sklearn_standard_scaler' } }
-                                                },
-                                                next: {
-                                                  block: {
-                                                    type: 'var_set',
-                                                    fields: { VAR: 'X_train_scaled' },
-                                                    inputs: {
-                                                      VALUE: {
-                                                        block: {
-                                                          type: 'sklearn_fit_transform',
-                                                          inputs: {
-                                                            DATA: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'X_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
-                                                            TRANSFORMER: { block: { type: 'sklearn_model_var', fields: { VAR: 'scaler' } } }
-                                                          }
-                                                        }
-                                                      }
-                                                    },
-                                                    next: {
-                                                      block: {
-                                                        type: 'var_set',
-                                                        fields: { VAR: 'X_test_scaled' },
-                                                        inputs: {
-                                                          VALUE: {
-                                                            block: {
-                                                              type: 'sklearn_transform',
-                                                              inputs: {
-                                                                DATA: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'X_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
-                                                                TRANSFORMER: { block: { type: 'sklearn_model_var', fields: { VAR: 'scaler' } } }
-                                                              }
-                                                            }
-                                                          }
-                                                        },
-                                                        next: {
-                                                          block: {
-                                                            type: 'comment_block',
-                                                            fields: { COMMENT: 'Train Linear Regression model' },
-                                                            next: {
-                                                              block: {
-                                                                type: 'sklearn_set_model',
-                                                                fields: { VAR: 'model' },
-                                                                inputs: {
-                                                                  VALUE: { block: { type: 'sklearn_linear_regression' } }
-                                                                },
-                                                                next: {
-                                                                  block: {
-                                                                    type: 'sklearn_set_model',
-                                                                    fields: { VAR: 'model' },
-                                                                    inputs: {
-                                                                      VALUE: {
-                                                                        block: {
-                                                                          type: 'sklearn_fit',
-                                                                          inputs: {
-                                                                            MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
-                                                                            X: { block: { type: 'var_get', fields: { VAR: 'X_train_scaled' } } },
-                                                                            Y: { block: { type: 'sklearn_get_train_data', fields: { TYPE: 'y_train' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } }
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    },
-                                                                    next: {
-                                                                      block: {
-                                                                        type: 'comment_block',
-                                                                        fields: { COMMENT: 'Evaluate with R² score' },
-                                                                        next: {
-                                                                          block: {
-                                                                            type: 'var_set',
-                                                                            fields: { VAR: 'y_pred' },
-                                                                            inputs: {
-                                                                              VALUE: {
-                                                                                block: {
-                                                                                  type: 'sklearn_predict',
-                                                                                  inputs: {
-                                                                                    MODEL: { block: { type: 'sklearn_model_var', fields: { VAR: 'model' } } },
-                                                                                    X: { block: { type: 'var_get', fields: { VAR: 'X_test_scaled' } } }
-                                                                                  }
-                                                                                }
-                                                                              }
-                                                                            },
-                                                                            next: {
-                                                                              block: {
-                                                                                type: 'pandas_print',
-                                                                                inputs: {
-                                                                                  VALUE: {
-                                                                                    block: {
-                                                                                      type: 'sklearn_r2_score',
-                                                                                      inputs: {
-                                                                                        Y_TRUE: { block: { type: 'sklearn_get_test_data', fields: { TYPE: 'y_test' }, inputs: { SPLIT: { block: { type: 'var_get', fields: { VAR: 'split' } } } } } },
-                                                                                        Y_PRED: { block: { type: 'var_get', fields: { VAR: 'y_pred' } } }
-                                                                                      }
-                                                                                    }
-                                                                                  }
-                                                                                }
-                                                                              }
-                                                                            }
-                                                                          }
-                                                                        }
-                                                                      }
-                                                                    }
-                                                                  }
-                                                                }
-                                                              }
-                                                            }
-                                                          }
-                                                        }
-                                                      }
-                                                    }
-                                                  }
-                                                }
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
+        blocks: [{
+          type: 'comment', x: 50, y: 30, fields: { TEXT: 'Regression: Tips dataset' },
+          next: { block: {
+            type: 'load_data', fields: { TYPE: 'url', VAR: 'df', PATH: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv' },
+            next: { block: {
+              type: 'prepare_features', fields: { VAR: 'df', FEATURES: 'total_bill, size', TARGET: 'tip', X_VAR: 'X', Y_VAR: 'y' },
+              next: { block: {
+                type: 'split_data', fields: { X_VAR: 'X', Y_VAR: 'y', TEST_SIZE: 0.2 },
+                next: { block: {
+                  type: 'create_model', fields: { MODEL_TYPE: 'linear_reg', MODEL_VAR: 'model', TASK: 'regressor' },
+                  next: { block: {
+                    type: 'train_model', fields: { MODEL_VAR: 'model' },
+                    next: { block: {
+                      type: 'predict', fields: { MODEL_VAR: 'model', DATA: 'X_test', PRED_VAR: 'y_pred' },
+                      next: { block: {
+                        type: 'evaluate', fields: { METRIC: 'r2', Y_TRUE: 'y_test', Y_PRED: 'y_pred' },
+                        next: { block: {
+                          type: 'evaluate', fields: { METRIC: 'rmse', Y_TRUE: 'y_test', Y_PRED: 'y_pred' }
+                        }}
+                      }}
+                    }}
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }]
       }
     };
 

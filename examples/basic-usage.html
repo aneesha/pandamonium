@@ -70,48 +70,24 @@
       document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
     });
 
-    // Load a simple example
+    // Load a simple example using new high-level blocks
     const exampleWorkspace = {
       blocks: {
         languageVersion: 0,
         blocks: [
           {
-            type: 'pandas_set_dataframe',
+            type: 'load_data',
             x: 50,
             y: 50,
-            fields: { VAR: 'df' },
-            inputs: {
-              VALUE: {
-                block: {
-                  type: 'pandas_read_csv',
-                  inputs: {
-                    PATH: {
-                      block: {
-                        type: 'text_value',
-                        fields: { TEXT: 'data.csv' }
-                      }
-                    }
-                  }
-                }
-              }
-            },
+            fields: { TYPE: 'csv', VAR: 'df', PATH: 'data.csv' },
             next: {
               block: {
-                type: 'pandas_print',
-                inputs: {
-                  VALUE: {
-                    block: {
-                      type: 'pandas_head',
-                      fields: { N: 5 },
-                      inputs: {
-                        DATAFRAME: {
-                          block: {
-                            type: 'pandas_dataframe_var',
-                            fields: { VAR: 'df' }
-                          }
-                        }
-                      }
-                    }
+                type: 'preview_data',
+                fields: { VAR: 'df', TYPE: 'head', N: 5 },
+                next: {
+                  block: {
+                    type: 'preview_data',
+                    fields: { VAR: 'df', TYPE: 'shape', N: 5 }
                   }
                 }
               }

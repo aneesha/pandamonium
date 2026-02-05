@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pandamonium - Data Exploration</title>
+  <title>Pandamonium - Data Cleaning & Transformation</title>
   <script src="https://unpkg.com/blockly/blockly.min.js"></script>
   <script src="../dist/pandamonium.umd.js"></script>
   <style>
@@ -28,7 +28,7 @@
       overflow: hidden;
     }
     .code-panel {
-      width: 450px;
+      width: 500px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -51,19 +51,19 @@
     }
     button {
       padding: 10px 20px;
-      background: #E65C00;
+      background: #FB8C00;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff7b00; }
+    button:hover { background: #FF9800; }
   </style>
 </head>
 <body>
-  <h1>🐼 Data Exploration Example</h1>
-  <p>This example shows common data exploration operations using the simplified high-level blocks.</p>
+  <h1>🐼 Data Cleaning & Transformation Example</h1>
+  <p>This example demonstrates data cleaning and transformation operations using the simplified high-level blocks.</p>
 
   <div class="container">
     <div id="blocklyDiv"></div>
@@ -86,26 +86,29 @@
       document.getElementById('codeOutput').textContent = code || '# No blocks yet...';
     });
 
-    // Data exploration example with new high-level blocks
-    const explorationExample = {
+    // Data cleaning example with new high-level blocks
+    const cleaningExample = {
       blocks: {
         languageVersion: 0,
         blocks: [{
-          type: 'comment', x: 50, y: 30, fields: { TEXT: 'Data Exploration Workflow' },
+          type: 'comment', x: 50, y: 30, fields: { TEXT: 'Data Cleaning: Titanic dataset' },
           next: { block: {
-            type: 'load_data', fields: { TYPE: 'csv', VAR: 'df', PATH: 'sales_data.csv' },
+            type: 'load_data', fields: { TYPE: 'url', VAR: 'df', PATH: 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv' },
             next: { block: {
-              type: 'preview_data', fields: { VAR: 'df', TYPE: 'head', N: 10 },
+              type: 'preview_data', fields: { VAR: 'df', TYPE: 'shape', N: 5 },
               next: { block: {
-                type: 'preview_data', fields: { VAR: 'df', TYPE: 'shape', N: 5 },
+                type: 'handle_missing', fields: { VAR: 'df', METHOD: 'drop', FILL_VALUE: '0' },
                 next: { block: {
-                  type: 'preview_data', fields: { VAR: 'df', TYPE: 'columns', N: 5 },
+                  type: 'select_columns', fields: { ACTION: 'keep', VAR: 'df', COLUMNS: 'survived, pclass, sex, age, fare' },
                   next: { block: {
-                    type: 'preview_data', fields: { VAR: 'df', TYPE: 'dtypes', N: 5 },
+                    type: 'filter_rows', fields: { VAR: 'df', COLUMN: 'age', OP: '>', VALUE: '18' },
                     next: { block: {
-                      type: 'preview_data', fields: { VAR: 'df', TYPE: 'describe', N: 5 },
+                      type: 'sort_data', fields: { VAR: 'df', COLUMN: 'age', ORDER: 'True' },
                       next: { block: {
-                        type: 'group_summarize', fields: { VAR: 'df', GROUP_COL: 'category', AGG: 'sum', VALUE_COL: 'amount', RESULT_VAR: 'summary' }
+                        type: 'preview_data', fields: { VAR: 'df', TYPE: 'head', N: 10 },
+                        next: { block: {
+                          type: 'preview_data', fields: { VAR: 'df', TYPE: 'describe', N: 5 }
+                        }}
                       }}
                     }}
                   }}
@@ -117,7 +120,7 @@
       }
     };
 
-    pandamonium.loadWorkspace(explorationExample);
+    pandamonium.loadWorkspace(cleaningExample);
 
     function copyCode() {
       const code = pandamonium.generateCode();

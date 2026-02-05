@@ -1,1278 +1,292 @@
-import * as c from "blockly";
-import { default as D } from "blockly";
-const s = 20, y = {
-  // Data Loading
-  pandas_read_csv: {
-    type: "pandas_read_csv",
-    message0: "read CSV from %1",
-    args0: [
-      { type: "input_value", name: "PATH", check: "String" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Read a CSV file into a DataFrame",
-    helpUrl: ""
+import * as n from "blockly";
+import { default as v } from "blockly";
+const d = {
+  data: "#E65C00",
+  transform: "#FB8C00"
+}, _ = {
+  // --- DATA LOADING ---
+  load_data: {
+    type: "load_data",
+    init: function() {
+      this.appendDummyInput().appendField("Load").appendField(new n.FieldDropdown([
+        ["CSV", "csv"],
+        ["Excel", "excel"],
+        ["JSON", "json"],
+        ["from URL", "url"]
+      ]), "TYPE").appendField("→").appendField(new n.FieldTextInput("df"), "VAR"), this.appendDummyInput().appendField("Path:").appendField(new n.FieldTextInput("data.csv"), "PATH"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.data), this.setTooltip("Load data from file into a DataFrame");
+    }
   },
-  pandas_read_excel: {
-    type: "pandas_read_excel",
-    message0: "read Excel from %1 sheet %2",
-    args0: [
-      { type: "input_value", name: "PATH", check: "String" },
-      { type: "input_value", name: "SHEET", check: "String" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Read an Excel file into a DataFrame",
-    helpUrl: ""
+  // --- DATA PREVIEW ---
+  preview_data: {
+    type: "preview_data",
+    init: function() {
+      this.appendDummyInput().appendField("Preview").appendField(new n.FieldTextInput("df"), "VAR").appendField(":").appendField(new n.FieldDropdown([
+        ["first rows", "head"],
+        ["last rows", "tail"],
+        ["statistics", "describe"],
+        ["shape", "shape"],
+        ["columns", "columns"],
+        ["data types", "dtypes"],
+        ["info", "info"],
+        ["sample", "sample"]
+      ]), "TYPE").appendField(new n.FieldNumber(5, 1, 100), "N"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.data), this.setTooltip("Preview data in different ways");
+    }
   },
-  pandas_read_json: {
-    type: "pandas_read_json",
-    message0: "read JSON from %1",
-    args0: [
-      { type: "input_value", name: "PATH", check: "String" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Read a JSON file into a DataFrame",
-    helpUrl: ""
+  // --- SELECT COLUMNS ---
+  select_columns: {
+    type: "select_columns",
+    init: function() {
+      this.appendDummyInput().appendField(new n.FieldDropdown([
+        ["Keep columns", "keep"],
+        ["Drop columns", "drop"]
+      ]), "ACTION").appendField("from").appendField(new n.FieldTextInput("df"), "VAR"), this.appendDummyInput().appendField("Columns:").appendField(new n.FieldTextInput("col1, col2"), "COLUMNS"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Keep or drop specific columns");
+    }
   },
-  // DataFrame Creation
-  pandas_create_dataframe: {
-    type: "pandas_create_dataframe",
-    message0: "create DataFrame from %1",
-    args0: [
-      { type: "input_value", name: "DATA", check: "Dict" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Create a DataFrame from a dictionary",
-    helpUrl: ""
-  },
-  pandas_dataframe_var: {
-    type: "pandas_dataframe_var",
-    message0: "DataFrame %1",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "df" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Reference a DataFrame variable",
-    helpUrl: ""
-  },
-  pandas_set_dataframe: {
-    type: "pandas_set_dataframe",
-    message0: "set %1 to %2",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "df" },
-      { type: "input_value", name: "VALUE", check: "DataFrame" }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: s,
-    tooltip: "Assign a DataFrame to a variable",
-    helpUrl: ""
-  },
-  // Column Operations
-  pandas_select_columns: {
-    type: "pandas_select_columns",
-    message0: "select columns %1 from %2",
-    args0: [
-      { type: "input_value", name: "COLUMNS", check: "Array" },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Select specific columns from a DataFrame",
-    helpUrl: ""
-  },
-  pandas_select_column: {
-    type: "pandas_select_column",
-    message0: "column %1 from %2",
-    args0: [
-      { type: "input_value", name: "COLUMN", check: "String" },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "Series",
-    colour: s,
-    tooltip: "Select a single column as a Series",
-    helpUrl: ""
-  },
-  pandas_drop_columns: {
-    type: "pandas_drop_columns",
-    message0: "drop columns %1 from %2",
-    args0: [
-      { type: "input_value", name: "COLUMNS", check: "Array" },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Drop columns from a DataFrame",
-    helpUrl: ""
-  },
-  pandas_rename_columns: {
-    type: "pandas_rename_columns",
-    message0: "rename columns %1 in %2",
-    args0: [
-      { type: "input_value", name: "MAPPING", check: "Dict" },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Rename columns in a DataFrame",
-    helpUrl: ""
-  },
-  // Row Operations
-  pandas_head: {
-    type: "pandas_head",
-    message0: "first %1 rows of %2",
-    args0: [
-      { type: "field_number", name: "N", value: 5, min: 1 },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Get the first n rows",
-    helpUrl: ""
-  },
-  pandas_tail: {
-    type: "pandas_tail",
-    message0: "last %1 rows of %2",
-    args0: [
-      { type: "field_number", name: "N", value: 5, min: 1 },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Get the last n rows",
-    helpUrl: ""
-  },
-  pandas_sample: {
-    type: "pandas_sample",
-    message0: "sample %1 rows from %2",
-    args0: [
-      { type: "field_number", name: "N", value: 5, min: 1 },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Random sample of rows",
-    helpUrl: ""
-  },
-  // Filtering
-  pandas_filter: {
-    type: "pandas_filter",
-    message0: "filter %1 where %2",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "CONDITION", check: "Condition" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Filter DataFrame rows based on condition",
-    helpUrl: ""
-  },
-  pandas_condition: {
-    type: "pandas_condition",
-    message0: "%1 %2 %3",
-    args0: [
-      { type: "input_value", name: "COLUMN", check: "Series" },
-      { type: "field_dropdown", name: "OP", options: [
+  // --- FILTER ROWS ---
+  filter_rows: {
+    type: "filter_rows",
+    init: function() {
+      this.appendDummyInput().appendField("Filter").appendField(new n.FieldTextInput("df"), "VAR").appendField("where"), this.appendDummyInput().appendField(new n.FieldTextInput("column"), "COLUMN").appendField(new n.FieldDropdown([
         ["==", "=="],
         ["!=", "!="],
         [">", ">"],
         ["<", "<"],
         [">=", ">="],
-        ["<=", "<="]
-      ] },
-      { type: "input_value", name: "VALUE" }
-    ],
-    output: "Condition",
-    colour: s,
-    tooltip: "Create a filter condition",
-    helpUrl: ""
+        ["<=", "<="],
+        ["contains", "contains"],
+        ["is null", "isnull"],
+        ["not null", "notnull"]
+      ]), "OP").appendField(new n.FieldTextInput("value"), "VALUE"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Filter rows based on condition");
+    }
   },
-  pandas_isnull: {
-    type: "pandas_isnull",
-    message0: "%1 is null",
-    args0: [
-      { type: "input_value", name: "COLUMN", check: "Series" }
-    ],
-    output: "Condition",
-    colour: s,
-    tooltip: "Check for null values",
-    helpUrl: ""
+  // --- HANDLE MISSING ---
+  handle_missing: {
+    type: "handle_missing",
+    init: function() {
+      this.appendDummyInput().appendField("Handle missing in").appendField(new n.FieldTextInput("df"), "VAR"), this.appendDummyInput().appendField(new n.FieldDropdown([
+        ["Drop rows with nulls", "drop"],
+        ["Fill with value", "value"],
+        ["Fill with mean", "mean"],
+        ["Fill with median", "median"],
+        ["Fill with mode", "mode"],
+        ["Forward fill", "ffill"],
+        ["Backward fill", "bfill"]
+      ]), "METHOD").appendField(new n.FieldTextInput("0"), "FILL_VALUE"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Handle missing values");
+    }
   },
-  pandas_notnull: {
-    type: "pandas_notnull",
-    message0: "%1 is not null",
-    args0: [
-      { type: "input_value", name: "COLUMN", check: "Series" }
-    ],
-    output: "Condition",
-    colour: s,
-    tooltip: "Check for non-null values",
-    helpUrl: ""
-  },
-  pandas_dropna: {
-    type: "pandas_dropna",
-    message0: "drop null rows from %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Drop rows with null values",
-    helpUrl: ""
-  },
-  pandas_fillna: {
-    type: "pandas_fillna",
-    message0: "fill null values in %1 with %2",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "VALUE" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Fill null values with a specified value",
-    helpUrl: ""
-  },
-  // Aggregation
-  pandas_groupby: {
-    type: "pandas_groupby",
-    message0: "group %1 by %2",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "COLUMNS", check: ["String", "Array"] }
-    ],
-    output: "GroupBy",
-    colour: s,
-    tooltip: "Group DataFrame by columns",
-    helpUrl: ""
-  },
-  pandas_agg: {
-    type: "pandas_agg",
-    message0: "aggregate %1 with %2",
-    args0: [
-      { type: "input_value", name: "GROUPED", check: "GroupBy" },
-      { type: "field_dropdown", name: "FUNC", options: [
-        ["sum", "sum"],
-        ["mean", "mean"],
-        ["median", "median"],
-        ["min", "min"],
-        ["max", "max"],
-        ["count", "count"],
-        ["std", "std"],
-        ["var", "var"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Apply aggregation function",
-    helpUrl: ""
-  },
-  // Statistics
-  pandas_describe: {
-    type: "pandas_describe",
-    message0: "describe %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Generate descriptive statistics",
-    helpUrl: ""
-  },
-  pandas_value_counts: {
-    type: "pandas_value_counts",
-    message0: "value counts of %1",
-    args0: [
-      { type: "input_value", name: "SERIES", check: "Series" }
-    ],
-    output: "Series",
-    colour: s,
-    tooltip: "Count unique values",
-    helpUrl: ""
-  },
-  pandas_corr: {
-    type: "pandas_corr",
-    message0: "correlation matrix of %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Compute correlation matrix",
-    helpUrl: ""
-  },
-  // Sorting
-  pandas_sort_values: {
-    type: "pandas_sort_values",
-    message0: "sort %1 by %2 %3",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "COLUMNS", check: ["String", "Array"] },
-      { type: "field_dropdown", name: "ORDER", options: [
+  // --- SORT DATA ---
+  sort_data: {
+    type: "sort_data",
+    init: function() {
+      this.appendDummyInput().appendField("Sort").appendField(new n.FieldTextInput("df"), "VAR").appendField("by").appendField(new n.FieldTextInput("column"), "COLUMN").appendField(new n.FieldDropdown([
         ["ascending", "True"],
         ["descending", "False"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Sort DataFrame by columns",
-    helpUrl: ""
+      ]), "ORDER"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Sort data by column");
+    }
   },
-  // Merging
-  pandas_merge: {
-    type: "pandas_merge",
-    message0: "merge %1 with %2 on %3 how %4",
-    args0: [
-      { type: "input_value", name: "LEFT", check: "DataFrame" },
-      { type: "input_value", name: "RIGHT", check: "DataFrame" },
-      { type: "input_value", name: "ON", check: ["String", "Array"] },
-      { type: "field_dropdown", name: "HOW", options: [
+  // --- GROUP & SUMMARIZE ---
+  group_summarize: {
+    type: "group_summarize",
+    init: function() {
+      this.appendDummyInput().appendField("Group").appendField(new n.FieldTextInput("df"), "VAR").appendField("by").appendField(new n.FieldTextInput("group_col"), "GROUP_COL"), this.appendDummyInput().appendField("Calc").appendField(new n.FieldDropdown([
+        ["sum", "sum"],
+        ["mean", "mean"],
+        ["count", "count"],
+        ["min", "min"],
+        ["max", "max"],
+        ["median", "median"],
+        ["std", "std"]
+      ]), "AGG").appendField("of").appendField(new n.FieldTextInput("value_col"), "VALUE_COL").appendField("→").appendField(new n.FieldTextInput("result"), "RESULT_VAR"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Group by column and aggregate");
+    }
+  },
+  // --- MERGE DATA ---
+  merge_data: {
+    type: "merge_data",
+    init: function() {
+      this.appendDummyInput().appendField("Merge").appendField(new n.FieldTextInput("df1"), "LEFT").appendField("with").appendField(new n.FieldTextInput("df2"), "RIGHT"), this.appendDummyInput().appendField("On:").appendField(new n.FieldTextInput("key"), "ON").appendField("How:").appendField(new n.FieldDropdown([
         ["inner", "inner"],
         ["left", "left"],
         ["right", "right"],
         ["outer", "outer"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Merge two DataFrames",
-    helpUrl: ""
-  },
-  pandas_concat: {
-    type: "pandas_concat",
-    message0: "concatenate %1 axis %2",
-    args0: [
-      { type: "input_value", name: "DATAFRAMES", check: "Array" },
-      { type: "field_dropdown", name: "AXIS", options: [
-        ["rows (0)", "0"],
-        ["columns (1)", "1"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Concatenate DataFrames",
-    helpUrl: ""
-  },
-  // Pivot
-  pandas_pivot_table: {
-    type: "pandas_pivot_table",
-    message0: "pivot %1 index %2 columns %3 values %4 aggfunc %5",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "INDEX", check: ["String", "Array"] },
-      { type: "input_value", name: "COLUMNS", check: ["String", "Array"] },
-      { type: "input_value", name: "VALUES", check: ["String", "Array"] },
-      { type: "field_dropdown", name: "AGGFUNC", options: [
-        ["mean", "mean"],
-        ["sum", "sum"],
-        ["count", "count"],
-        ["min", "min"],
-        ["max", "max"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Create pivot table",
-    helpUrl: ""
-  },
-  // Apply
-  pandas_apply: {
-    type: "pandas_apply",
-    message0: "apply %1 to %2 axis %3",
-    args0: [
-      { type: "input_value", name: "FUNC", check: "Function" },
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "field_dropdown", name: "AXIS", options: [
-        ["rows (0)", "0"],
-        ["columns (1)", "1"]
-      ] }
-    ],
-    output: "DataFrame",
-    colour: s,
-    tooltip: "Apply function along axis",
-    helpUrl: ""
-  },
-  // Shape & Info
-  pandas_shape: {
-    type: "pandas_shape",
-    message0: "shape of %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "Tuple",
-    colour: s,
-    tooltip: "Get DataFrame shape (rows, columns)",
-    helpUrl: ""
-  },
-  pandas_columns: {
-    type: "pandas_columns",
-    message0: "columns of %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "Array",
-    colour: s,
-    tooltip: "Get column names",
-    helpUrl: ""
-  },
-  pandas_dtypes: {
-    type: "pandas_dtypes",
-    message0: "data types of %1",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" }
-    ],
-    output: "Series",
-    colour: s,
-    tooltip: "Get column data types",
-    helpUrl: ""
-  },
-  // Output
-  pandas_to_csv: {
-    type: "pandas_to_csv",
-    message0: "save %1 to CSV %2",
-    args0: [
-      { type: "input_value", name: "DATAFRAME", check: "DataFrame" },
-      { type: "input_value", name: "PATH", check: "String" }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: s,
-    tooltip: "Save DataFrame to CSV file",
-    helpUrl: ""
-  },
-  pandas_print: {
-    type: "pandas_print",
-    message0: "print %1",
-    args0: [
-      { type: "input_value", name: "VALUE" }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: s,
-    tooltip: "Print value to console",
-    helpUrl: ""
+      ]), "HOW").appendField("→").appendField(new n.FieldTextInput("merged"), "RESULT"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(d.transform), this.setTooltip("Merge two DataFrames");
+    }
   }
 };
 function g() {
-  Object.entries(y).forEach(([u, e]) => {
-    c.Blocks[u] = {
+  Object.entries(_).forEach(([o, e]) => {
+    typeof e.init == "function" ? n.Blocks[o] = {
+      init: e.init
+    } : n.Blocks[o] = {
       init: function() {
         this.jsonInit(e);
       }
     };
   });
 }
-const n = 160, p = 180, i = 200, f = {
-  // Data Splitting
-  sklearn_train_test_split: {
-    type: "sklearn_train_test_split",
-    message0: "train/test split X: %1 y: %2 test size: %3 random state: %4",
-    args0: [
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "Y", check: ["Series", "Array"] },
-      { type: "field_number", name: "TEST_SIZE", value: 0.2, min: 0.1, max: 0.9, precision: 0.1 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "SplitData",
-    colour: n,
-    tooltip: "Split data into training and test sets",
-    helpUrl: ""
+const l = {
+  ml_prep: "#00897B",
+  ml_model: "#5C6BC0",
+  ml_eval: "#EF5350"
+}, y = {
+  // --- PREPARE FEATURES (ML) ---
+  prepare_features: {
+    type: "prepare_features",
+    init: function() {
+      this.appendDummyInput().appendField("Prepare ML data from").appendField(new n.FieldTextInput("df"), "VAR"), this.appendDummyInput().appendField("Features:").appendField(new n.FieldTextInput("col1, col2, col3"), "FEATURES"), this.appendDummyInput().appendField("Target:").appendField(new n.FieldTextInput("target"), "TARGET"), this.appendDummyInput().appendField("→ X:").appendField(new n.FieldTextInput("X"), "X_VAR").appendField("y:").appendField(new n.FieldTextInput("y"), "Y_VAR"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_prep), this.setTooltip("Extract features (X) and target (y) for ML");
+    }
   },
-  sklearn_get_train_data: {
-    type: "sklearn_get_train_data",
-    message0: "training %1 from %2",
-    args0: [
-      { type: "field_dropdown", name: "TYPE", options: [
-        ["X", "X_train"],
-        ["y", "y_train"]
-      ] },
-      { type: "input_value", name: "SPLIT", check: "SplitData" }
-    ],
-    output: ["DataFrame", "Series", "Array"],
-    colour: n,
-    tooltip: "Get training data from split",
-    helpUrl: ""
+  // --- SPLIT DATA ---
+  split_data: {
+    type: "split_data",
+    init: function() {
+      this.appendDummyInput().appendField("Split").appendField(new n.FieldTextInput("X"), "X_VAR").appendField(",").appendField(new n.FieldTextInput("y"), "Y_VAR").appendField("test:").appendField(new n.FieldNumber(0.2, 0.1, 0.5, 0.05), "TEST_SIZE"), this.appendDummyInput().appendField("→ X_train, X_test, y_train, y_test"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_prep), this.setTooltip("Split into train and test sets");
+    }
   },
-  sklearn_get_test_data: {
-    type: "sklearn_get_test_data",
-    message0: "test %1 from %2",
-    args0: [
-      { type: "field_dropdown", name: "TYPE", options: [
-        ["X", "X_test"],
-        ["y", "y_test"]
-      ] },
-      { type: "input_value", name: "SPLIT", check: "SplitData" }
-    ],
-    output: ["DataFrame", "Series", "Array"],
-    colour: n,
-    tooltip: "Get test data from split",
-    helpUrl: ""
+  // --- SCALE FEATURES ---
+  scale_features: {
+    type: "scale_features",
+    init: function() {
+      this.appendDummyInput().appendField("Scale features").appendField(new n.FieldDropdown([
+        ["StandardScaler (z-score)", "standard"],
+        ["MinMaxScaler (0-1)", "minmax"],
+        ["RobustScaler (outliers)", "robust"]
+      ]), "SCALER"), this.appendDummyInput().appendField("Fit on X_train, transform X_train & X_test"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_prep), this.setTooltip("Scale/normalize features");
+    }
   },
-  // Preprocessing - Scalers
-  sklearn_standard_scaler: {
-    type: "sklearn_standard_scaler",
-    message0: "StandardScaler",
-    output: "Scaler",
-    colour: p,
-    tooltip: "Standardize features by removing mean and scaling to unit variance",
-    helpUrl: ""
+  // --- CREATE MODEL ---
+  create_model: {
+    type: "create_model",
+    init: function() {
+      this.appendDummyInput().appendField("Create").appendField(new n.FieldDropdown([
+        ["Linear Regression", "linear_reg"],
+        ["Logistic Regression", "logistic_reg"],
+        ["Decision Tree", "decision_tree"],
+        ["Random Forest", "random_forest"],
+        ["KNN", "knn"],
+        ["SVM", "svm"],
+        ["Naive Bayes", "naive_bayes"],
+        ["Gradient Boosting", "gradient_boost"]
+      ]), "MODEL_TYPE").appendField("→").appendField(new n.FieldTextInput("model"), "MODEL_VAR"), this.appendDummyInput().appendField("Task:").appendField(new n.FieldDropdown([
+        ["Classification", "classifier"],
+        ["Regression", "regressor"]
+      ]), "TASK"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_model), this.setTooltip("Create an ML model");
+    }
   },
-  sklearn_minmax_scaler: {
-    type: "sklearn_minmax_scaler",
-    message0: "MinMaxScaler min: %1 max: %2",
-    args0: [
-      { type: "field_number", name: "MIN", value: 0 },
-      { type: "field_number", name: "MAX", value: 1 }
-    ],
-    output: "Scaler",
-    colour: p,
-    tooltip: "Scale features to a given range",
-    helpUrl: ""
+  // --- TRAIN MODEL ---
+  train_model: {
+    type: "train_model",
+    init: function() {
+      this.appendDummyInput().appendField("Train").appendField(new n.FieldTextInput("model"), "MODEL_VAR").appendField("on X_train, y_train"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_model), this.setTooltip("Train the model on training data");
+    }
   },
-  sklearn_robust_scaler: {
-    type: "sklearn_robust_scaler",
-    message0: "RobustScaler",
-    output: "Scaler",
-    colour: p,
-    tooltip: "Scale features using statistics robust to outliers",
-    helpUrl: ""
+  // --- PREDICT ---
+  predict: {
+    type: "predict",
+    init: function() {
+      this.appendDummyInput().appendField("Predict with").appendField(new n.FieldTextInput("model"), "MODEL_VAR").appendField("on").appendField(new n.FieldDropdown([
+        ["X_test", "X_test"],
+        ["X_train", "X_train"],
+        ["X", "X"]
+      ]), "DATA").appendField("→").appendField(new n.FieldTextInput("y_pred"), "PRED_VAR"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_model), this.setTooltip("Make predictions");
+    }
   },
-  sklearn_fit_transform: {
-    type: "sklearn_fit_transform",
-    message0: "fit and transform %1 with %2",
-    args0: [
-      { type: "input_value", name: "DATA", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "TRANSFORMER", check: ["Scaler", "Encoder", "Transformer"] }
-    ],
-    output: "Array",
-    colour: p,
-    tooltip: "Fit transformer and transform data",
-    helpUrl: ""
+  // --- GRID SEARCH ---
+  grid_search: {
+    type: "grid_search",
+    init: function() {
+      this.appendDummyInput().appendField("Grid Search").appendField(new n.FieldTextInput("model"), "MODEL_VAR"), this.appendDummyInput().appendField("Params:").appendField(new n.FieldTextInput("n_estimators: [50,100], max_depth: [3,5,10]"), "PARAMS"), this.appendDummyInput().appendField("CV folds:").appendField(new n.FieldNumber(5, 2, 10), "CV").appendField("Scoring:").appendField(new n.FieldDropdown([
+        ["accuracy", "accuracy"],
+        ["f1", "f1"],
+        ["precision", "precision"],
+        ["recall", "recall"],
+        ["r2", "r2"],
+        ["neg_mse", "neg_mean_squared_error"]
+      ]), "SCORING"), this.appendDummyInput().appendField("→ best model in").appendField(new n.FieldTextInput("model"), "BEST_VAR"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_model), this.setTooltip("Find best hyperparameters with grid search");
+    }
   },
-  sklearn_transform: {
-    type: "sklearn_transform",
-    message0: "transform %1 with %2",
-    args0: [
-      { type: "input_value", name: "DATA", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "TRANSFORMER", check: ["Scaler", "Encoder", "Transformer"] }
-    ],
-    output: "Array",
-    colour: p,
-    tooltip: "Transform data using fitted transformer",
-    helpUrl: ""
+  // --- CROSS VALIDATE ---
+  cross_validate: {
+    type: "cross_validate",
+    init: function() {
+      this.appendDummyInput().appendField("Cross-validate").appendField(new n.FieldTextInput("model"), "MODEL_VAR").appendField("folds:").appendField(new n.FieldNumber(5, 2, 10), "CV"), this.appendDummyInput().appendField("Print mean score ± std"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_eval), this.setTooltip("Evaluate with cross-validation");
+    }
   },
-  // Preprocessing - Encoders
-  sklearn_label_encoder: {
-    type: "sklearn_label_encoder",
-    message0: "LabelEncoder",
-    output: "Encoder",
-    colour: p,
-    tooltip: "Encode labels as integers",
-    helpUrl: ""
-  },
-  sklearn_onehot_encoder: {
-    type: "sklearn_onehot_encoder",
-    message0: "OneHotEncoder sparse: %1",
-    args0: [
-      { type: "field_dropdown", name: "SPARSE", options: [
-        ["False", "False"],
-        ["True", "True"]
-      ] }
-    ],
-    output: "Encoder",
-    colour: p,
-    tooltip: "Encode categorical features as one-hot",
-    helpUrl: ""
-  },
-  // Classification Models
-  sklearn_logistic_regression: {
-    type: "sklearn_logistic_regression",
-    message0: "LogisticRegression C: %1 max_iter: %2",
-    args0: [
-      { type: "field_number", name: "C", value: 1, min: 1e-3, precision: 1e-3 },
-      { type: "field_number", name: "MAX_ITER", value: 100, min: 1 }
-    ],
-    output: "Classifier",
-    colour: n,
-    tooltip: "Logistic Regression classifier",
-    helpUrl: ""
-  },
-  sklearn_decision_tree_classifier: {
-    type: "sklearn_decision_tree_classifier",
-    message0: "DecisionTreeClassifier max_depth: %1 random_state: %2",
-    args0: [
-      { type: "field_number", name: "MAX_DEPTH", value: 5, min: 1 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Classifier",
-    colour: n,
-    tooltip: "Decision Tree classifier",
-    helpUrl: ""
-  },
-  sklearn_random_forest_classifier: {
-    type: "sklearn_random_forest_classifier",
-    message0: "RandomForestClassifier n_estimators: %1 max_depth: %2 random_state: %3",
-    args0: [
-      { type: "field_number", name: "N_ESTIMATORS", value: 100, min: 1 },
-      { type: "field_number", name: "MAX_DEPTH", value: 5, min: 1 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Classifier",
-    colour: n,
-    tooltip: "Random Forest classifier",
-    helpUrl: ""
-  },
-  sklearn_svc: {
-    type: "sklearn_svc",
-    message0: "SVC kernel: %1 C: %2 random_state: %3",
-    args0: [
-      { type: "field_dropdown", name: "KERNEL", options: [
-        ["rbf", "rbf"],
-        ["linear", "linear"],
-        ["poly", "poly"],
-        ["sigmoid", "sigmoid"]
-      ] },
-      { type: "field_number", name: "C", value: 1, min: 1e-3, precision: 1e-3 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Classifier",
-    colour: n,
-    tooltip: "Support Vector Classifier",
-    helpUrl: ""
-  },
-  sklearn_knn_classifier: {
-    type: "sklearn_knn_classifier",
-    message0: "KNeighborsClassifier n_neighbors: %1",
-    args0: [
-      { type: "field_number", name: "N_NEIGHBORS", value: 5, min: 1 }
-    ],
-    output: "Classifier",
-    colour: n,
-    tooltip: "K-Nearest Neighbors classifier",
-    helpUrl: ""
-  },
-  sklearn_naive_bayes: {
-    type: "sklearn_naive_bayes",
-    message0: "GaussianNB",
-    output: "Classifier",
-    colour: n,
-    tooltip: "Gaussian Naive Bayes classifier",
-    helpUrl: ""
-  },
-  // Regression Models
-  sklearn_linear_regression: {
-    type: "sklearn_linear_regression",
-    message0: "LinearRegression",
-    output: "Regressor",
-    colour: n,
-    tooltip: "Linear Regression model",
-    helpUrl: ""
-  },
-  sklearn_ridge: {
-    type: "sklearn_ridge",
-    message0: "Ridge alpha: %1",
-    args0: [
-      { type: "field_number", name: "ALPHA", value: 1, min: 0, precision: 0.1 }
-    ],
-    output: "Regressor",
-    colour: n,
-    tooltip: "Ridge Regression model",
-    helpUrl: ""
-  },
-  sklearn_lasso: {
-    type: "sklearn_lasso",
-    message0: "Lasso alpha: %1",
-    args0: [
-      { type: "field_number", name: "ALPHA", value: 1, min: 0, precision: 0.1 }
-    ],
-    output: "Regressor",
-    colour: n,
-    tooltip: "Lasso Regression model",
-    helpUrl: ""
-  },
-  sklearn_decision_tree_regressor: {
-    type: "sklearn_decision_tree_regressor",
-    message0: "DecisionTreeRegressor max_depth: %1 random_state: %2",
-    args0: [
-      { type: "field_number", name: "MAX_DEPTH", value: 5, min: 1 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Regressor",
-    colour: n,
-    tooltip: "Decision Tree regressor",
-    helpUrl: ""
-  },
-  sklearn_random_forest_regressor: {
-    type: "sklearn_random_forest_regressor",
-    message0: "RandomForestRegressor n_estimators: %1 max_depth: %2 random_state: %3",
-    args0: [
-      { type: "field_number", name: "N_ESTIMATORS", value: 100, min: 1 },
-      { type: "field_number", name: "MAX_DEPTH", value: 5, min: 1 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Regressor",
-    colour: n,
-    tooltip: "Random Forest regressor",
-    helpUrl: ""
-  },
-  sklearn_svr: {
-    type: "sklearn_svr",
-    message0: "SVR kernel: %1 C: %2",
-    args0: [
-      { type: "field_dropdown", name: "KERNEL", options: [
-        ["rbf", "rbf"],
-        ["linear", "linear"],
-        ["poly", "poly"],
-        ["sigmoid", "sigmoid"]
-      ] },
-      { type: "field_number", name: "C", value: 1, min: 1e-3, precision: 1e-3 }
-    ],
-    output: "Regressor",
-    colour: n,
-    tooltip: "Support Vector Regressor",
-    helpUrl: ""
-  },
-  // Clustering
-  sklearn_kmeans: {
-    type: "sklearn_kmeans",
-    message0: "KMeans n_clusters: %1 random_state: %2",
-    args0: [
-      { type: "field_number", name: "N_CLUSTERS", value: 3, min: 2 },
-      { type: "field_number", name: "RANDOM_STATE", value: 42, min: 0 }
-    ],
-    output: "Clusterer",
-    colour: n,
-    tooltip: "K-Means clustering",
-    helpUrl: ""
-  },
-  sklearn_dbscan: {
-    type: "sklearn_dbscan",
-    message0: "DBSCAN eps: %1 min_samples: %2",
-    args0: [
-      { type: "field_number", name: "EPS", value: 0.5, min: 0.01, precision: 0.01 },
-      { type: "field_number", name: "MIN_SAMPLES", value: 5, min: 1 }
-    ],
-    output: "Clusterer",
-    colour: n,
-    tooltip: "DBSCAN clustering",
-    helpUrl: ""
-  },
-  // Model Operations
-  sklearn_fit: {
-    type: "sklearn_fit",
-    message0: "fit %1 with X: %2 y: %3",
-    args0: [
-      { type: "input_value", name: "MODEL", check: ["Classifier", "Regressor", "Clusterer"] },
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "Y", check: ["Series", "Array"] }
-    ],
-    output: ["Classifier", "Regressor", "Clusterer"],
-    colour: n,
-    tooltip: "Fit model to training data",
-    helpUrl: ""
-  },
-  sklearn_predict: {
-    type: "sklearn_predict",
-    message0: "predict with %1 on %2",
-    args0: [
-      { type: "input_value", name: "MODEL", check: ["Classifier", "Regressor", "Clusterer"] },
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] }
-    ],
-    output: "Array",
-    colour: n,
-    tooltip: "Make predictions",
-    helpUrl: ""
-  },
-  sklearn_predict_proba: {
-    type: "sklearn_predict_proba",
-    message0: "predict probabilities with %1 on %2",
-    args0: [
-      { type: "input_value", name: "MODEL", check: "Classifier" },
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] }
-    ],
-    output: "Array",
-    colour: n,
-    tooltip: "Predict class probabilities",
-    helpUrl: ""
-  },
-  sklearn_score: {
-    type: "sklearn_score",
-    message0: "score %1 on X: %2 y: %3",
-    args0: [
-      { type: "input_value", name: "MODEL", check: ["Classifier", "Regressor"] },
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "Y", check: ["Series", "Array"] }
-    ],
-    output: "Number",
-    colour: n,
-    tooltip: "Calculate model score",
-    helpUrl: ""
-  },
-  // Metrics - Classification
-  sklearn_accuracy_score: {
-    type: "sklearn_accuracy_score",
-    message0: "accuracy score y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate accuracy score",
-    helpUrl: ""
-  },
-  sklearn_precision_score: {
-    type: "sklearn_precision_score",
-    message0: "precision score y_true: %1 y_pred: %2 average: %3",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" },
-      { type: "field_dropdown", name: "AVERAGE", options: [
-        ["binary", "binary"],
-        ["micro", "micro"],
-        ["macro", "macro"],
-        ["weighted", "weighted"]
-      ] }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate precision score",
-    helpUrl: ""
-  },
-  sklearn_recall_score: {
-    type: "sklearn_recall_score",
-    message0: "recall score y_true: %1 y_pred: %2 average: %3",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" },
-      { type: "field_dropdown", name: "AVERAGE", options: [
-        ["binary", "binary"],
-        ["micro", "micro"],
-        ["macro", "macro"],
-        ["weighted", "weighted"]
-      ] }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate recall score",
-    helpUrl: ""
-  },
-  sklearn_f1_score: {
-    type: "sklearn_f1_score",
-    message0: "F1 score y_true: %1 y_pred: %2 average: %3",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" },
-      { type: "field_dropdown", name: "AVERAGE", options: [
-        ["binary", "binary"],
-        ["micro", "micro"],
-        ["macro", "macro"],
-        ["weighted", "weighted"]
-      ] }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate F1 score",
-    helpUrl: ""
-  },
-  sklearn_confusion_matrix: {
-    type: "sklearn_confusion_matrix",
-    message0: "confusion matrix y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Array",
-    colour: i,
-    tooltip: "Generate confusion matrix",
-    helpUrl: ""
-  },
-  sklearn_classification_report: {
-    type: "sklearn_classification_report",
-    message0: "classification report y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "String",
-    colour: i,
-    tooltip: "Generate classification report",
-    helpUrl: ""
-  },
-  // Metrics - Regression
-  sklearn_mse: {
-    type: "sklearn_mse",
-    message0: "mean squared error y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate Mean Squared Error",
-    helpUrl: ""
-  },
-  sklearn_rmse: {
-    type: "sklearn_rmse",
-    message0: "root mean squared error y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate Root Mean Squared Error",
-    helpUrl: ""
-  },
-  sklearn_mae: {
-    type: "sklearn_mae",
-    message0: "mean absolute error y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate Mean Absolute Error",
-    helpUrl: ""
-  },
-  sklearn_r2_score: {
-    type: "sklearn_r2_score",
-    message0: "R² score y_true: %1 y_pred: %2",
-    args0: [
-      { type: "input_value", name: "Y_TRUE", check: ["Series", "Array"] },
-      { type: "input_value", name: "Y_PRED", check: "Array" }
-    ],
-    output: "Number",
-    colour: i,
-    tooltip: "Calculate R-squared score",
-    helpUrl: ""
-  },
-  // Cross Validation
-  sklearn_cross_val_score: {
-    type: "sklearn_cross_val_score",
-    message0: "cross validation score model: %1 X: %2 y: %3 cv: %4",
-    args0: [
-      { type: "input_value", name: "MODEL", check: ["Classifier", "Regressor"] },
-      { type: "input_value", name: "X", check: ["DataFrame", "Array"] },
-      { type: "input_value", name: "Y", check: ["Series", "Array"] },
-      { type: "field_number", name: "CV", value: 5, min: 2 }
-    ],
-    output: "Array",
-    colour: n,
-    tooltip: "Evaluate model with cross-validation",
-    helpUrl: ""
-  },
-  // Dimensionality Reduction
-  sklearn_pca: {
-    type: "sklearn_pca",
-    message0: "PCA n_components: %1",
-    args0: [
-      { type: "field_number", name: "N_COMPONENTS", value: 2, min: 1 }
-    ],
-    output: "Transformer",
-    colour: p,
-    tooltip: "Principal Component Analysis",
-    helpUrl: ""
-  },
-  // Model variable
-  sklearn_model_var: {
-    type: "sklearn_model_var",
-    message0: "model %1",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "model" }
-    ],
-    output: ["Classifier", "Regressor", "Clusterer"],
-    colour: n,
-    tooltip: "Reference a model variable",
-    helpUrl: ""
-  },
-  sklearn_set_model: {
-    type: "sklearn_set_model",
-    message0: "set %1 to %2",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "model" },
-      { type: "input_value", name: "VALUE", check: ["Classifier", "Regressor", "Clusterer", "Scaler", "Encoder", "Transformer"] }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: n,
-    tooltip: "Assign a model to a variable",
-    helpUrl: ""
+  // --- EVALUATE ---
+  evaluate: {
+    type: "evaluate",
+    init: function() {
+      this.appendDummyInput().appendField("Evaluate:").appendField(new n.FieldDropdown([
+        ["Accuracy", "accuracy"],
+        ["Precision", "precision"],
+        ["Recall", "recall"],
+        ["F1 Score", "f1"],
+        ["Confusion Matrix", "confusion"],
+        ["Classification Report", "class_report"],
+        ["MSE", "mse"],
+        ["RMSE", "rmse"],
+        ["MAE", "mae"],
+        ["R² Score", "r2"]
+      ]), "METRIC"), this.appendDummyInput().appendField("y_true:").appendField(new n.FieldDropdown([
+        ["y_test", "y_test"],
+        ["y_train", "y_train"],
+        ["y", "y"]
+      ]), "Y_TRUE").appendField("y_pred:").appendField(new n.FieldTextInput("y_pred"), "Y_PRED"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(l.ml_eval), this.setTooltip("Calculate evaluation metric");
+    }
   }
 };
-function A() {
-  Object.entries(f).forEach(([u, e]) => {
-    c.Blocks[u] = {
+function $() {
+  Object.entries(y).forEach(([o, e]) => {
+    typeof e.init == "function" ? n.Blocks[o] = {
+      init: e.init
+    } : n.Blocks[o] = {
       init: function() {
         this.jsonInit(e);
       }
     };
   });
 }
-const N = 260, h = 280, k = 300, _ = 210, C = {
-  // String blocks
-  text_value: {
-    type: "text_value",
-    message0: '"%1"',
-    args0: [
-      { type: "field_input", name: "TEXT", text: "" }
-    ],
-    output: "String",
-    colour: N,
-    tooltip: "A text string",
-    helpUrl: ""
+const m = {
+  output: "#8E24AA",
+  comment: 160
+}, w = {
+  // --- OUTPUT ---
+  output: {
+    type: "output",
+    init: function() {
+      this.appendDummyInput().appendField(new n.FieldDropdown([
+        ["Print", "print"],
+        ["Save as CSV", "csv"],
+        ["Save as Excel", "excel"]
+      ]), "TYPE").appendField(new n.FieldTextInput("df"), "VAR"), this.appendDummyInput().appendField("Path:").appendField(new n.FieldTextInput("output.csv"), "PATH"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(m.output), this.setTooltip("Output data");
+    }
   },
-  // Number blocks
-  number_value: {
-    type: "number_value",
-    message0: "%1",
-    args0: [
-      { type: "field_number", name: "NUM", value: 0 }
-    ],
-    output: "Number",
-    colour: 230,
-    tooltip: "A number",
-    helpUrl: ""
-  },
-  // Array/List blocks
-  array_create: {
-    type: "array_create",
-    message0: "list %1",
-    args0: [
-      { type: "field_input", name: "ITEMS", text: "item1, item2, item3" }
-    ],
-    output: "Array",
-    colour: h,
-    tooltip: "Create a list of items (comma-separated)",
-    helpUrl: ""
-  },
-  array_create_with: {
-    type: "array_create_with",
-    message0: "list of strings %1",
-    args0: [
-      { type: "field_input", name: "ITEMS", text: "col1, col2" }
-    ],
-    output: "Array",
-    colour: h,
-    tooltip: "Create a list of strings (comma-separated)",
-    helpUrl: ""
-  },
-  array_length: {
-    type: "array_length",
-    message0: "length of %1",
-    args0: [
-      { type: "input_value", name: "ARRAY", check: "Array" }
-    ],
-    output: "Number",
-    colour: h,
-    tooltip: "Get length of an array",
-    helpUrl: ""
-  },
-  // Dictionary blocks
-  dict_create: {
-    type: "dict_create",
-    message0: "dict { %1 }",
-    args0: [
-      { type: "field_input", name: "ITEMS", text: "key1: value1, key2: value2" }
-    ],
-    output: "Dict",
-    colour: k,
-    tooltip: "Create a dictionary (key: value pairs)",
-    helpUrl: ""
-  },
-  dict_get: {
-    type: "dict_get",
-    message0: "get %1 from %2",
-    args0: [
-      { type: "input_value", name: "KEY", check: "String" },
-      { type: "input_value", name: "DICT", check: "Dict" }
-    ],
-    output: null,
-    colour: k,
-    tooltip: "Get value from dictionary by key",
-    helpUrl: ""
-  },
-  // Boolean blocks
-  boolean_value: {
-    type: "boolean_value",
-    message0: "%1",
-    args0: [
-      { type: "field_dropdown", name: "BOOL", options: [
-        ["True", "True"],
-        ["False", "False"]
-      ] }
-    ],
-    output: "Boolean",
-    colour: _,
-    tooltip: "Boolean value",
-    helpUrl: ""
-  },
-  logic_compare: {
-    type: "logic_compare",
-    message0: "%1 %2 %3",
-    args0: [
-      { type: "input_value", name: "A" },
-      { type: "field_dropdown", name: "OP", options: [
-        ["=", "=="],
-        ["≠", "!="],
-        ["<", "<"],
-        ["≤", "<="],
-        [">", ">"],
-        ["≥", ">="]
-      ] },
-      { type: "input_value", name: "B" }
-    ],
-    inputsInline: !0,
-    output: "Boolean",
-    colour: _,
-    tooltip: "Compare two values",
-    helpUrl: ""
-  },
-  logic_operation: {
-    type: "logic_operation",
-    message0: "%1 %2 %3",
-    args0: [
-      { type: "input_value", name: "A", check: "Boolean" },
-      { type: "field_dropdown", name: "OP", options: [
-        ["and", "and"],
-        ["or", "or"]
-      ] },
-      { type: "input_value", name: "B", check: "Boolean" }
-    ],
-    inputsInline: !0,
-    output: "Boolean",
-    colour: _,
-    tooltip: "Logical operation",
-    helpUrl: ""
-  },
-  logic_not: {
-    type: "logic_not",
-    message0: "not %1",
-    args0: [
-      { type: "input_value", name: "BOOL", check: "Boolean" }
-    ],
-    output: "Boolean",
-    colour: _,
-    tooltip: "Negate boolean",
-    helpUrl: ""
-  },
-  // Math operations
-  math_arithmetic: {
-    type: "math_arithmetic",
-    message0: "%1 %2 %3",
-    args0: [
-      { type: "input_value", name: "A", check: "Number" },
-      { type: "field_dropdown", name: "OP", options: [
-        ["+", "ADD"],
-        ["-", "MINUS"],
-        ["×", "MULTIPLY"],
-        ["÷", "DIVIDE"],
-        ["^", "POWER"]
-      ] },
-      { type: "input_value", name: "B", check: "Number" }
-    ],
-    inputsInline: !0,
-    output: "Number",
-    colour: 230,
-    tooltip: "Arithmetic operation",
-    helpUrl: ""
-  },
-  // Function/Lambda
-  lambda_simple: {
-    type: "lambda_simple",
-    message0: "lambda x: %1",
-    args0: [
-      { type: "field_input", name: "EXPR", text: "x * 2" }
-    ],
-    output: "Function",
-    colour: 320,
-    tooltip: "Create a simple lambda function",
-    helpUrl: ""
-  },
-  // Comment block
-  comment_block: {
-    type: "comment_block",
-    message0: "# %1",
-    args0: [
-      { type: "field_input", name: "COMMENT", text: "comment" }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: 120,
-    tooltip: "Add a comment to the code",
-    helpUrl: ""
-  },
-  // Variable assignment
-  var_set: {
-    type: "var_set",
-    message0: "set %1 = %2",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "x" },
-      { type: "input_value", name: "VALUE" }
-    ],
-    previousStatement: null,
-    nextStatement: null,
-    colour: 330,
-    tooltip: "Set a variable",
-    helpUrl: ""
-  },
-  var_get: {
-    type: "var_get",
-    message0: "%1",
-    args0: [
-      { type: "field_variable", name: "VAR", variable: "x" }
-    ],
-    output: null,
-    colour: 330,
-    tooltip: "Get a variable",
-    helpUrl: ""
-  },
-  // None/null
-  none_value: {
-    type: "none_value",
-    message0: "None",
-    output: null,
-    colour: 120,
-    tooltip: "Python None value",
-    helpUrl: ""
+  // --- COMMENT ---
+  comment: {
+    type: "comment",
+    init: function() {
+      this.appendDummyInput().appendField("#").appendField(new n.FieldTextInput("comment"), "TEXT"), this.setPreviousStatement(!0, null), this.setNextStatement(!0, null), this.setColour(m.comment), this.setTooltip("Add a comment");
+    }
   }
 };
-function E() {
-  Object.entries(C).forEach(([u, e]) => {
-    c.Blocks[u] = {
+function V() {
+  Object.entries(w).forEach(([o, e]) => {
+    typeof e.init == "function" ? n.Blocks[o] = {
+      init: e.init
+    } : n.Blocks[o] = {
       init: function() {
         this.jsonInit(e);
       }
     };
   });
 }
-const t = {
-  ATOMIC: 0,
-  COLLECTION: 1,
-  MEMBER: 2.1,
-  FUNCTION_CALL: 2,
-  EXPONENTIATION: 3,
-  MULTIPLICATIVE: 5,
-  ADDITIVE: 6,
-  RELATIONAL: 11,
-  NOT: 12,
-  AND: 13,
-  OR: 14,
-  LAMBDA: 16,
-  NONE: 99
-};
-class T extends c.Generator {
+class I extends n.Generator {
   constructor() {
     super("Python"), this.imports = /* @__PURE__ */ new Set(), this.INDENT = "    ", this.registerGenerators(), this.setupScrub();
   }
   setupScrub() {
-    this.scrub_ = (e, a, r) => {
-      const o = e.nextConnection && e.nextConnection.targetBlock();
-      return o && !r ? a + this.blockToCode(o) : a;
+    this.scrub_ = (e, t, i) => {
+      const s = e.nextConnection && e.nextConnection.targetBlock();
+      return s && !i ? t + this.blockToCode(s) : t;
     };
   }
   getImports() {
@@ -1284,491 +298,263 @@ class T extends c.Generator {
   addImport(e) {
     this.imports.add(e);
   }
-  getVarName(e, a, r) {
-    const o = e.getField(a);
-    return o && typeof o.getText == "function" && o.getText() || r;
-  }
   registerGenerators() {
-    this.forBlock.text_value = (e) => [`"${e.getFieldValue("TEXT")}"`, t.ATOMIC], this.forBlock.number_value = (e) => {
-      const a = e.getFieldValue("NUM");
-      return [String(a), t.ATOMIC];
-    }, this.forBlock.array_create = (e) => [`[${e.getFieldValue("ITEMS").split(",").map((o) => o.trim()).filter((o) => o).join(", ")}]`, t.COLLECTION], this.forBlock.array_create_with = (e) => [`[${e.getFieldValue("ITEMS").split(",").map((o) => `"${o.trim()}"`).filter((o) => o !== '""').join(", ")}]`, t.COLLECTION], this.forBlock.array_length = (e) => [`len(${this.valueToCode(e, "ARRAY", t.NONE) || "[]"})`, t.FUNCTION_CALL], this.forBlock.dict_create = (e) => [`{${e.getFieldValue("ITEMS").split(",").map((o) => {
-      const [l, d] = o.split(":").map((m) => m.trim());
-      return l && d ? `"${l}": ${d}` : null;
-    }).filter(Boolean).join(", ")}}`, t.COLLECTION], this.forBlock.dict_get = (e) => {
-      const a = this.valueToCode(e, "KEY", t.NONE) || '""';
-      return [`${this.valueToCode(e, "DICT", t.MEMBER) || "{}"}[${a}]`, t.MEMBER];
-    }, this.forBlock.boolean_value = (e) => [e.getFieldValue("BOOL"), t.ATOMIC], this.forBlock.logic_compare = (e) => {
-      const a = this.valueToCode(e, "A", t.RELATIONAL) || "0", r = this.valueToCode(e, "B", t.RELATIONAL) || "0", o = e.getFieldValue("OP");
-      return [`${a} ${o} ${r}`, t.RELATIONAL];
-    }, this.forBlock.logic_operation = (e) => {
-      const a = this.valueToCode(e, "A", t.AND) || "False", r = this.valueToCode(e, "B", t.AND) || "False", o = e.getFieldValue("OP"), l = o === "and" ? t.AND : t.OR;
-      return [`${a} ${o} ${r}`, l];
-    }, this.forBlock.logic_not = (e) => [`not ${this.valueToCode(e, "BOOL", t.NOT) || "False"}`, t.NOT], this.forBlock.math_arithmetic = (e) => {
-      const a = {
-        ADD: ["+", t.ADDITIVE],
-        MINUS: ["-", t.ADDITIVE],
-        MULTIPLY: ["*", t.MULTIPLICATIVE],
-        DIVIDE: ["/", t.MULTIPLICATIVE],
-        POWER: ["**", t.EXPONENTIATION]
-      }, r = e.getFieldValue("OP"), [o, l] = a[r] || ["+", t.ADDITIVE], d = this.valueToCode(e, "A", l) || "0", m = this.valueToCode(e, "B", l) || "0";
-      return [`${d} ${o} ${m}`, l];
-    }, this.forBlock.lambda_simple = (e) => [`lambda x: ${e.getFieldValue("EXPR")}`, t.LAMBDA], this.forBlock.comment_block = (e) => `# ${e.getFieldValue("COMMENT")}
-`, this.forBlock.var_set = (e) => {
-      const a = this.getVarName(e, "VAR", "x"), r = this.valueToCode(e, "VALUE", t.NONE) || "None";
-      return `${a} = ${r}
-`;
-    }, this.forBlock.var_get = (e) => [this.getVarName(e, "VAR", "x"), t.ATOMIC], this.forBlock.none_value = () => ["None", t.ATOMIC], this.registerPandasGenerators(), this.registerSklearnGenerators();
-  }
-  registerPandasGenerators() {
-    this.forBlock.pandas_read_csv = (e) => (this.addImport("import pandas as pd"), [`pd.read_csv(${this.valueToCode(e, "PATH", t.NONE) || '""'})`, t.FUNCTION_CALL]), this.forBlock.pandas_read_excel = (e) => {
+    this.forBlock.load_data = (e) => {
       this.addImport("import pandas as pd");
-      const a = this.valueToCode(e, "PATH", t.NONE) || '""', r = this.valueToCode(e, "SHEET", t.NONE) || "0";
-      return [`pd.read_excel(${a}, sheet_name=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_read_json = (e) => (this.addImport("import pandas as pd"), [`pd.read_json(${this.valueToCode(e, "PATH", t.NONE) || '""'})`, t.FUNCTION_CALL]), this.forBlock.pandas_create_dataframe = (e) => (this.addImport("import pandas as pd"), [`pd.DataFrame(${this.valueToCode(e, "DATA", t.NONE) || "{}"})`, t.FUNCTION_CALL]), this.forBlock.pandas_dataframe_var = (e) => [this.getVarName(e, "VAR", "df"), t.ATOMIC], this.forBlock.pandas_set_dataframe = (e) => {
-      const a = this.getVarName(e, "VAR", "df"), r = this.valueToCode(e, "VALUE", t.NONE) || "pd.DataFrame()";
-      return `${a} = ${r}
+      const t = e.getFieldValue("TYPE"), i = e.getFieldValue("VAR"), s = e.getFieldValue("PATH");
+      let r = "";
+      return t === "csv" || t === "url" ? r = `${i} = pd.read_csv("${s}")
+` : t === "excel" ? r = `${i} = pd.read_excel("${s}")
+` : t === "json" && (r = `${i} = pd.read_json("${s}")
+`), r;
+    }, this.forBlock.preview_data = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("TYPE"), s = e.getFieldValue("N");
+      let r = "";
+      return i === "head" ? r = `print(${t}.head(${s}))
+` : i === "tail" ? r = `print(${t}.tail(${s}))
+` : i === "describe" ? r = `print(${t}.describe())
+` : i === "shape" ? r = `print(f"Shape: {${t}.shape}")
+` : i === "columns" ? r = `print(f"Columns: {${t}.columns.tolist()}")
+` : i === "dtypes" ? r = `print(${t}.dtypes)
+` : i === "info" ? r = `print(${t}.info())
+` : i === "sample" && (r = `print(${t}.sample(${s}))
+`), r;
+    }, this.forBlock.select_columns = (e) => {
+      const t = e.getFieldValue("ACTION"), i = e.getFieldValue("VAR"), s = e.getFieldValue("COLUMNS").split(",").map((r) => `"${r.trim()}"`).join(", ");
+      return t === "keep" ? `${i} = ${i}[[${s}]]
+` : `${i} = ${i}.drop(columns=[${s}])
 `;
-    }, this.forBlock.pandas_select_columns = (e) => {
-      const a = this.valueToCode(e, "COLUMNS", t.NONE) || "[]";
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}[${a}]`, t.MEMBER];
-    }, this.forBlock.pandas_select_column = (e) => {
-      const a = this.valueToCode(e, "COLUMN", t.NONE) || '""';
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}[${a}]`, t.MEMBER];
-    }, this.forBlock.pandas_drop_columns = (e) => {
-      const a = this.valueToCode(e, "COLUMNS", t.NONE) || "[]";
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.drop(columns=${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_rename_columns = (e) => {
-      const a = this.valueToCode(e, "MAPPING", t.NONE) || "{}";
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.rename(columns=${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_head = (e) => {
-      const a = e.getFieldValue("N") || 5;
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.head(${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_tail = (e) => {
-      const a = e.getFieldValue("N") || 5;
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.tail(${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_sample = (e) => {
-      const a = e.getFieldValue("N") || 5;
-      return [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.sample(${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_filter = (e) => {
-      const a = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", r = this.valueToCode(e, "CONDITION", t.NONE) || "True";
-      return [`${a}[${r}]`, t.MEMBER];
-    }, this.forBlock.pandas_condition = (e) => {
-      const a = this.valueToCode(e, "COLUMN", t.RELATIONAL) || 'df["col"]', r = e.getFieldValue("OP") || "==", o = this.valueToCode(e, "VALUE", t.RELATIONAL) || "0";
-      return [`(${a} ${r} ${o})`, t.RELATIONAL];
-    }, this.forBlock.pandas_isnull = (e) => [`${this.valueToCode(e, "COLUMN", t.MEMBER) || 'df["col"]'}.isnull()`, t.FUNCTION_CALL], this.forBlock.pandas_notnull = (e) => [`${this.valueToCode(e, "COLUMN", t.MEMBER) || 'df["col"]'}.notnull()`, t.FUNCTION_CALL], this.forBlock.pandas_dropna = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.dropna()`, t.FUNCTION_CALL], this.forBlock.pandas_fillna = (e) => {
-      const a = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", r = this.valueToCode(e, "VALUE", t.NONE) || "0";
-      return [`${a}.fillna(${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_groupby = (e) => {
-      const a = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", r = this.valueToCode(e, "COLUMNS", t.NONE) || '"col"';
-      return [`${a}.groupby(${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_agg = (e) => {
-      const a = this.valueToCode(e, "GROUPED", t.MEMBER) || 'df.groupby("col")', r = e.getFieldValue("FUNC") || "sum";
-      return [`${a}.${r}()`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_describe = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.describe()`, t.FUNCTION_CALL], this.forBlock.pandas_value_counts = (e) => [`${this.valueToCode(e, "SERIES", t.MEMBER) || 'df["col"]'}.value_counts()`, t.FUNCTION_CALL], this.forBlock.pandas_corr = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.corr()`, t.FUNCTION_CALL], this.forBlock.pandas_sort_values = (e) => {
-      const a = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", r = this.valueToCode(e, "COLUMNS", t.NONE) || '"col"', o = e.getFieldValue("ORDER") || "True";
-      return [`${a}.sort_values(by=${r}, ascending=${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_merge = (e) => {
-      this.addImport("import pandas as pd");
-      const a = this.valueToCode(e, "LEFT", t.NONE) || "df1", r = this.valueToCode(e, "RIGHT", t.NONE) || "df2", o = this.valueToCode(e, "ON", t.NONE) || '"key"', l = e.getFieldValue("HOW") || "inner";
-      return [`pd.merge(${a}, ${r}, on=${o}, how="${l}")`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_concat = (e) => {
-      this.addImport("import pandas as pd");
-      const a = this.valueToCode(e, "DATAFRAMES", t.NONE) || "[]", r = e.getFieldValue("AXIS") || "0";
-      return [`pd.concat(${a}, axis=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_pivot_table = (e) => {
-      this.addImport("import pandas as pd");
-      const a = this.valueToCode(e, "DATAFRAME", t.NONE) || "df", r = this.valueToCode(e, "INDEX", t.NONE) || '"index"', o = this.valueToCode(e, "COLUMNS", t.NONE) || '"columns"', l = this.valueToCode(e, "VALUES", t.NONE) || '"values"', d = e.getFieldValue("AGGFUNC") || "mean";
-      return [`pd.pivot_table(${a}, index=${r}, columns=${o}, values=${l}, aggfunc="${d}")`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_apply = (e) => {
-      const a = this.valueToCode(e, "FUNC", t.NONE) || "lambda x: x", r = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", o = e.getFieldValue("AXIS") || "0";
-      return [`${r}.apply(${a}, axis=${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_shape = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.shape`, t.MEMBER], this.forBlock.pandas_columns = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.columns.tolist()`, t.FUNCTION_CALL], this.forBlock.pandas_dtypes = (e) => [`${this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df"}.dtypes`, t.MEMBER], this.forBlock.pandas_to_csv = (e) => {
-      const a = this.valueToCode(e, "DATAFRAME", t.MEMBER) || "df", r = this.valueToCode(e, "PATH", t.NONE) || '"output.csv"';
-      return `${a}.to_csv(${r}, index=False)
+    }, this.forBlock.filter_rows = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("COLUMN"), s = e.getFieldValue("OP"), r = e.getFieldValue("VALUE");
+      let a = "";
+      if (s === "isnull")
+        a = `${t} = ${t}[${t}["${i}"].isnull()]
 `;
-    }, this.forBlock.pandas_print = (e) => `print(${this.valueToCode(e, "VALUE", t.NONE) || '""'})
+      else if (s === "notnull")
+        a = `${t} = ${t}[${t}["${i}"].notnull()]
 `;
-  }
-  registerSklearnGenerators() {
-    this.forBlock.sklearn_train_test_split = (e) => {
+      else if (s === "contains")
+        a = `${t} = ${t}[${t}["${i}"].str.contains("${r}", na=False)]
+`;
+      else {
+        const u = isNaN(Number(r)) ? `"${r}"` : r;
+        a = `${t} = ${t}[${t}["${i}"] ${s} ${u}]
+`;
+      }
+      return a;
+    }, this.forBlock.handle_missing = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("METHOD"), s = e.getFieldValue("FILL_VALUE");
+      let r = "";
+      if (i === "drop")
+        r = `${t} = ${t}.dropna()
+`;
+      else if (i === "value") {
+        const a = isNaN(Number(s)) ? `"${s}"` : s;
+        r = `${t} = ${t}.fillna(${a})
+`;
+      } else i === "mean" ? r = `${t} = ${t}.fillna(${t}.mean(numeric_only=True))
+` : i === "median" ? r = `${t} = ${t}.fillna(${t}.median(numeric_only=True))
+` : i === "mode" ? r = `${t} = ${t}.fillna(${t}.mode().iloc[0])
+` : i === "ffill" ? r = `${t} = ${t}.ffill()
+` : i === "bfill" && (r = `${t} = ${t}.bfill()
+`);
+      return r;
+    }, this.forBlock.sort_data = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("COLUMN"), s = e.getFieldValue("ORDER");
+      return `${t} = ${t}.sort_values("${i}", ascending=${s})
+`;
+    }, this.forBlock.group_summarize = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("GROUP_COL"), s = e.getFieldValue("AGG"), r = e.getFieldValue("VALUE_COL"), a = e.getFieldValue("RESULT_VAR");
+      return `${a} = ${t}.groupby("${i}")["${r}"].${s}().reset_index()
+print(${a})
+`;
+    }, this.forBlock.merge_data = (e) => {
+      this.addImport("import pandas as pd");
+      const t = e.getFieldValue("LEFT"), i = e.getFieldValue("RIGHT"), s = e.getFieldValue("ON"), r = e.getFieldValue("HOW");
+      return `${e.getFieldValue("RESULT")} = pd.merge(${t}, ${i}, on="${s}", how="${r}")
+`;
+    }, this.forBlock.prepare_features = (e) => {
+      const t = e.getFieldValue("VAR"), i = e.getFieldValue("FEATURES").split(",").map((u) => `"${u.trim()}"`).join(", "), s = e.getFieldValue("TARGET"), r = e.getFieldValue("X_VAR"), a = e.getFieldValue("Y_VAR");
+      return `${r} = ${t}[[${i}]]
+${a} = ${t}["${s}"]
+`;
+    }, this.forBlock.split_data = (e) => {
       this.addImport("from sklearn.model_selection import train_test_split");
-      const a = this.valueToCode(e, "X", t.NONE) || "X", r = this.valueToCode(e, "Y", t.NONE) || "y", o = e.getFieldValue("TEST_SIZE") || 0.2, l = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`train_test_split(${a}, ${r}, test_size=${o}, random_state=${l})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_get_train_data = (e) => {
-      const a = e.getFieldValue("TYPE") || "X_train";
-      return [`${this.valueToCode(e, "SPLIT", t.NONE) || "split_data"}[${a === "X_train" ? 0 : 2}]`, t.MEMBER];
-    }, this.forBlock.sklearn_get_test_data = (e) => {
-      const a = e.getFieldValue("TYPE") || "X_test";
-      return [`${this.valueToCode(e, "SPLIT", t.NONE) || "split_data"}[${a === "X_test" ? 1 : 3}]`, t.MEMBER];
-    }, this.forBlock.sklearn_standard_scaler = () => (this.addImport("from sklearn.preprocessing import StandardScaler"), ["StandardScaler()", t.FUNCTION_CALL]), this.forBlock.sklearn_minmax_scaler = (e) => {
-      this.addImport("from sklearn.preprocessing import MinMaxScaler");
-      const a = e.getFieldValue("MIN") || 0, r = e.getFieldValue("MAX") || 1;
-      return [`MinMaxScaler(feature_range=(${a}, ${r}))`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_robust_scaler = () => (this.addImport("from sklearn.preprocessing import RobustScaler"), ["RobustScaler()", t.FUNCTION_CALL]), this.forBlock.sklearn_fit_transform = (e) => {
-      const a = this.valueToCode(e, "DATA", t.NONE) || "X";
-      return [`${this.valueToCode(e, "TRANSFORMER", t.MEMBER) || "scaler"}.fit_transform(${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_transform = (e) => {
-      const a = this.valueToCode(e, "DATA", t.NONE) || "X";
-      return [`${this.valueToCode(e, "TRANSFORMER", t.MEMBER) || "scaler"}.transform(${a})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_label_encoder = () => (this.addImport("from sklearn.preprocessing import LabelEncoder"), ["LabelEncoder()", t.FUNCTION_CALL]), this.forBlock.sklearn_onehot_encoder = (e) => (this.addImport("from sklearn.preprocessing import OneHotEncoder"), [`OneHotEncoder(sparse_output=${e.getFieldValue("SPARSE") || "False"})`, t.FUNCTION_CALL]), this.forBlock.sklearn_logistic_regression = (e) => {
-      this.addImport("from sklearn.linear_model import LogisticRegression");
-      const a = e.getFieldValue("C") || 1, r = e.getFieldValue("MAX_ITER") || 100;
-      return [`LogisticRegression(C=${a}, max_iter=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_decision_tree_classifier = (e) => {
-      this.addImport("from sklearn.tree import DecisionTreeClassifier");
-      const a = e.getFieldValue("MAX_DEPTH") || 5, r = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`DecisionTreeClassifier(max_depth=${a}, random_state=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_random_forest_classifier = (e) => {
-      this.addImport("from sklearn.ensemble import RandomForestClassifier");
-      const a = e.getFieldValue("N_ESTIMATORS") || 100, r = e.getFieldValue("MAX_DEPTH") || 5, o = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`RandomForestClassifier(n_estimators=${a}, max_depth=${r}, random_state=${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_svc = (e) => {
-      this.addImport("from sklearn.svm import SVC");
-      const a = e.getFieldValue("KERNEL") || "rbf", r = e.getFieldValue("C") || 1, o = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`SVC(kernel="${a}", C=${r}, random_state=${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_knn_classifier = (e) => (this.addImport("from sklearn.neighbors import KNeighborsClassifier"), [`KNeighborsClassifier(n_neighbors=${e.getFieldValue("N_NEIGHBORS") || 5})`, t.FUNCTION_CALL]), this.forBlock.sklearn_naive_bayes = () => (this.addImport("from sklearn.naive_bayes import GaussianNB"), ["GaussianNB()", t.FUNCTION_CALL]), this.forBlock.sklearn_linear_regression = () => (this.addImport("from sklearn.linear_model import LinearRegression"), ["LinearRegression()", t.FUNCTION_CALL]), this.forBlock.sklearn_ridge = (e) => (this.addImport("from sklearn.linear_model import Ridge"), [`Ridge(alpha=${e.getFieldValue("ALPHA") || 1})`, t.FUNCTION_CALL]), this.forBlock.sklearn_lasso = (e) => (this.addImport("from sklearn.linear_model import Lasso"), [`Lasso(alpha=${e.getFieldValue("ALPHA") || 1})`, t.FUNCTION_CALL]), this.forBlock.sklearn_decision_tree_regressor = (e) => {
-      this.addImport("from sklearn.tree import DecisionTreeRegressor");
-      const a = e.getFieldValue("MAX_DEPTH") || 5, r = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`DecisionTreeRegressor(max_depth=${a}, random_state=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_random_forest_regressor = (e) => {
-      this.addImport("from sklearn.ensemble import RandomForestRegressor");
-      const a = e.getFieldValue("N_ESTIMATORS") || 100, r = e.getFieldValue("MAX_DEPTH") || 5, o = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`RandomForestRegressor(n_estimators=${a}, max_depth=${r}, random_state=${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_svr = (e) => {
-      this.addImport("from sklearn.svm import SVR");
-      const a = e.getFieldValue("KERNEL") || "rbf", r = e.getFieldValue("C") || 1;
-      return [`SVR(kernel="${a}", C=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_kmeans = (e) => {
-      this.addImport("from sklearn.cluster import KMeans");
-      const a = e.getFieldValue("N_CLUSTERS") || 3, r = e.getFieldValue("RANDOM_STATE") || 42;
-      return [`KMeans(n_clusters=${a}, random_state=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_dbscan = (e) => {
-      this.addImport("from sklearn.cluster import DBSCAN");
-      const a = e.getFieldValue("EPS") || 0.5, r = e.getFieldValue("MIN_SAMPLES") || 5;
-      return [`DBSCAN(eps=${a}, min_samples=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_fit = (e) => {
-      const a = this.valueToCode(e, "MODEL", t.MEMBER) || "model", r = this.valueToCode(e, "X", t.NONE) || "X_train", o = this.valueToCode(e, "Y", t.NONE) || "y_train";
-      return [`${a}.fit(${r}, ${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_predict = (e) => {
-      const a = this.valueToCode(e, "MODEL", t.MEMBER) || "model", r = this.valueToCode(e, "X", t.NONE) || "X_test";
-      return [`${a}.predict(${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_predict_proba = (e) => {
-      const a = this.valueToCode(e, "MODEL", t.MEMBER) || "model", r = this.valueToCode(e, "X", t.NONE) || "X_test";
-      return [`${a}.predict_proba(${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_score = (e) => {
-      const a = this.valueToCode(e, "MODEL", t.MEMBER) || "model", r = this.valueToCode(e, "X", t.NONE) || "X_test", o = this.valueToCode(e, "Y", t.NONE) || "y_test";
-      return [`${a}.score(${r}, ${o})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_accuracy_score = (e) => {
-      this.addImport("from sklearn.metrics import accuracy_score");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`accuracy_score(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_precision_score = (e) => {
-      this.addImport("from sklearn.metrics import precision_score");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred", o = e.getFieldValue("AVERAGE") || "binary";
-      return [`precision_score(${a}, ${r}, average="${o}")`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_recall_score = (e) => {
-      this.addImport("from sklearn.metrics import recall_score");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred", o = e.getFieldValue("AVERAGE") || "binary";
-      return [`recall_score(${a}, ${r}, average="${o}")`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_f1_score = (e) => {
-      this.addImport("from sklearn.metrics import f1_score");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred", o = e.getFieldValue("AVERAGE") || "binary";
-      return [`f1_score(${a}, ${r}, average="${o}")`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_confusion_matrix = (e) => {
-      this.addImport("from sklearn.metrics import confusion_matrix");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`confusion_matrix(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_classification_report = (e) => {
-      this.addImport("from sklearn.metrics import classification_report");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`classification_report(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_mse = (e) => {
-      this.addImport("from sklearn.metrics import mean_squared_error");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`mean_squared_error(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_rmse = (e) => {
-      this.addImport("from sklearn.metrics import mean_squared_error"), this.addImport("import numpy as np");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`np.sqrt(mean_squared_error(${a}, ${r}))`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_mae = (e) => {
-      this.addImport("from sklearn.metrics import mean_absolute_error");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`mean_absolute_error(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_r2_score = (e) => {
-      this.addImport("from sklearn.metrics import r2_score");
-      const a = this.valueToCode(e, "Y_TRUE", t.NONE) || "y_true", r = this.valueToCode(e, "Y_PRED", t.NONE) || "y_pred";
-      return [`r2_score(${a}, ${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_cross_val_score = (e) => {
-      this.addImport("from sklearn.model_selection import cross_val_score");
-      const a = this.valueToCode(e, "MODEL", t.NONE) || "model", r = this.valueToCode(e, "X", t.NONE) || "X", o = this.valueToCode(e, "Y", t.NONE) || "y", l = e.getFieldValue("CV") || 5;
-      return [`cross_val_score(${a}, ${r}, ${o}, cv=${l})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_pca = (e) => (this.addImport("from sklearn.decomposition import PCA"), [`PCA(n_components=${e.getFieldValue("N_COMPONENTS") || 2})`, t.FUNCTION_CALL]), this.forBlock.sklearn_model_var = (e) => [this.getVarName(e, "VAR", "model"), t.ATOMIC], this.forBlock.sklearn_set_model = (e) => {
-      const a = this.getVarName(e, "VAR", "model"), r = this.valueToCode(e, "VALUE", t.NONE) || "None";
-      return `${a} = ${r}
+      const t = e.getFieldValue("X_VAR"), i = e.getFieldValue("Y_VAR"), s = e.getFieldValue("TEST_SIZE");
+      return `X_train, X_test, y_train, y_test = train_test_split(${t}, ${i}, test_size=${s}, random_state=42)
 `;
-    };
+    }, this.forBlock.scale_features = (e) => {
+      const t = e.getFieldValue("SCALER");
+      let i = "StandardScaler";
+      return t === "minmax" ? i = "MinMaxScaler" : t === "robust" && (i = "RobustScaler"), this.addImport(`from sklearn.preprocessing import ${i}`), `scaler = ${i}()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+`;
+    }, this.forBlock.create_model = (e) => {
+      const t = e.getFieldValue("MODEL_TYPE"), i = e.getFieldValue("TASK"), s = e.getFieldValue("MODEL_VAR");
+      let r = "";
+      return t === "linear_reg" ? (this.addImport("from sklearn.linear_model import LinearRegression"), r = `${s} = LinearRegression()
+`) : t === "logistic_reg" ? (this.addImport("from sklearn.linear_model import LogisticRegression"), r = `${s} = LogisticRegression(max_iter=1000)
+`) : t === "decision_tree" ? i === "classifier" ? (this.addImport("from sklearn.tree import DecisionTreeClassifier"), r = `${s} = DecisionTreeClassifier(random_state=42)
+`) : (this.addImport("from sklearn.tree import DecisionTreeRegressor"), r = `${s} = DecisionTreeRegressor(random_state=42)
+`) : t === "random_forest" ? i === "classifier" ? (this.addImport("from sklearn.ensemble import RandomForestClassifier"), r = `${s} = RandomForestClassifier(n_estimators=100, random_state=42)
+`) : (this.addImport("from sklearn.ensemble import RandomForestRegressor"), r = `${s} = RandomForestRegressor(n_estimators=100, random_state=42)
+`) : t === "knn" ? i === "classifier" ? (this.addImport("from sklearn.neighbors import KNeighborsClassifier"), r = `${s} = KNeighborsClassifier(n_neighbors=5)
+`) : (this.addImport("from sklearn.neighbors import KNeighborsRegressor"), r = `${s} = KNeighborsRegressor(n_neighbors=5)
+`) : t === "svm" ? i === "classifier" ? (this.addImport("from sklearn.svm import SVC"), r = `${s} = SVC(random_state=42)
+`) : (this.addImport("from sklearn.svm import SVR"), r = `${s} = SVR()
+`) : t === "naive_bayes" ? (this.addImport("from sklearn.naive_bayes import GaussianNB"), r = `${s} = GaussianNB()
+`) : t === "gradient_boost" && (i === "classifier" ? (this.addImport("from sklearn.ensemble import GradientBoostingClassifier"), r = `${s} = GradientBoostingClassifier(random_state=42)
+`) : (this.addImport("from sklearn.ensemble import GradientBoostingRegressor"), r = `${s} = GradientBoostingRegressor(random_state=42)
+`)), r;
+    }, this.forBlock.train_model = (e) => {
+      const t = e.getFieldValue("MODEL_VAR");
+      return `${t}.fit(X_train, y_train)
+print(f"Model trained: {type(${t}).__name__}")
+`;
+    }, this.forBlock.predict = (e) => {
+      const t = e.getFieldValue("MODEL_VAR"), i = e.getFieldValue("DATA");
+      return `${e.getFieldValue("PRED_VAR")} = ${t}.predict(${i})
+`;
+    }, this.forBlock.grid_search = (e) => {
+      this.addImport("from sklearn.model_selection import GridSearchCV");
+      const t = e.getFieldValue("MODEL_VAR"), i = e.getFieldValue("PARAMS"), s = e.getFieldValue("CV"), r = e.getFieldValue("SCORING"), a = e.getFieldValue("BEST_VAR");
+      return `param_grid = {${i.split(",").map((c) => {
+        const [h, f] = c.split(":").map((F) => F.trim());
+        return `"${h}": ${f}`;
+      }).join(", ")}}
+grid_search = GridSearchCV(${t}, param_grid, cv=${s}, scoring="${r}")
+grid_search.fit(X_train, y_train)
+${a} = grid_search.best_estimator_
+print(f"Best params: {grid_search.best_params_}")
+print(f"Best score: {grid_search.best_score_:.4f}")
+`;
+    }, this.forBlock.cross_validate = (e) => {
+      this.addImport("from sklearn.model_selection import cross_val_score"), this.addImport("import numpy as np");
+      const t = e.getFieldValue("MODEL_VAR"), i = e.getFieldValue("CV");
+      return `cv_scores = cross_val_score(${t}, X_train, y_train, cv=${i})
+print(f"CV Score: {cv_scores.mean():.4f} (+/- {cv_scores.std()*2:.4f})")
+`;
+    }, this.forBlock.evaluate = (e) => {
+      const t = e.getFieldValue("METRIC"), i = e.getFieldValue("Y_TRUE"), s = e.getFieldValue("Y_PRED");
+      let r = "";
+      return t === "accuracy" ? (this.addImport("from sklearn.metrics import accuracy_score"), r = `print(f"Accuracy: {accuracy_score(${i}, ${s}):.4f}")
+`) : t === "precision" ? (this.addImport("from sklearn.metrics import precision_score"), r = `print(f"Precision: {precision_score(${i}, ${s}, average='weighted'):.4f}")
+`) : t === "recall" ? (this.addImport("from sklearn.metrics import recall_score"), r = `print(f"Recall: {recall_score(${i}, ${s}, average='weighted'):.4f}")
+`) : t === "f1" ? (this.addImport("from sklearn.metrics import f1_score"), r = `print(f"F1 Score: {f1_score(${i}, ${s}, average='weighted'):.4f}")
+`) : t === "confusion" ? (this.addImport("from sklearn.metrics import confusion_matrix"), r = `print("Confusion Matrix:")
+print(confusion_matrix(${i}, ${s}))
+`) : t === "class_report" ? (this.addImport("from sklearn.metrics import classification_report"), r = `print("Classification Report:")
+print(classification_report(${i}, ${s}))
+`) : t === "mse" ? (this.addImport("from sklearn.metrics import mean_squared_error"), r = `print(f"MSE: {mean_squared_error(${i}, ${s}):.4f}")
+`) : t === "rmse" ? (this.addImport("from sklearn.metrics import mean_squared_error"), this.addImport("import numpy as np"), r = `print(f"RMSE: {np.sqrt(mean_squared_error(${i}, ${s})):.4f}")
+`) : t === "mae" ? (this.addImport("from sklearn.metrics import mean_absolute_error"), r = `print(f"MAE: {mean_absolute_error(${i}, ${s}):.4f}")
+`) : t === "r2" && (this.addImport("from sklearn.metrics import r2_score"), r = `print(f"R² Score: {r2_score(${i}, ${s}):.4f}")
+`), r;
+    }, this.forBlock.output = (e) => {
+      const t = e.getFieldValue("TYPE"), i = e.getFieldValue("VAR"), s = e.getFieldValue("PATH");
+      return t === "print" ? `print(${i})
+` : t === "csv" ? `${i}.to_csv("${s}", index=False)
+print(f"Saved to ${s}")
+` : t === "excel" ? `${i}.to_excel("${s}", index=False)
+print(f"Saved to ${s}")
+` : "";
+    }, this.forBlock.comment = (e) => `# ${e.getFieldValue("TEXT")}
+`;
   }
   generateCode(e) {
     this.clearImports();
-    const a = this.workspaceToCode(e), r = this.getImports();
-    let o = "";
-    return r.length > 0 && (o = r.join(`
+    const t = this.workspaceToCode(e), i = this.getImports();
+    let s = "";
+    return i.length > 0 && (s = i.sort().join(`
 `) + `
 
-`), o += a, o;
+`), s += t, s;
   }
 }
-const v = new T(), R = {
+const T = new I(), p = {
+  data: "#E65C00",
+  transform: "#FB8C00",
+  ml_prep: "#00897B",
+  ml_model: "#5C6BC0",
+  ml_eval: "#EF5350",
+  output: "#8E24AA"
+}, k = {
   kind: "categoryToolbox",
   contents: [
     {
       kind: "category",
-      name: "Data Loading",
-      colour: "#E65C00",
+      name: "📂 Load Data",
+      colour: p.data,
       contents: [
-        { kind: "block", type: "pandas_read_csv" },
-        { kind: "block", type: "pandas_read_excel" },
-        { kind: "block", type: "pandas_read_json" },
-        { kind: "block", type: "pandas_create_dataframe" }
+        { kind: "block", type: "load_data" },
+        { kind: "block", type: "preview_data" }
       ]
     },
     {
       kind: "category",
-      name: "DataFrame",
-      colour: "#E65C00",
+      name: "🔧 Transform",
+      colour: p.transform,
       contents: [
-        { kind: "block", type: "pandas_dataframe_var" },
-        { kind: "block", type: "pandas_set_dataframe" },
-        { kind: "block", type: "pandas_head" },
-        { kind: "block", type: "pandas_tail" },
-        { kind: "block", type: "pandas_sample" },
-        { kind: "block", type: "pandas_shape" },
-        { kind: "block", type: "pandas_columns" },
-        { kind: "block", type: "pandas_dtypes" },
-        { kind: "block", type: "pandas_describe" }
+        { kind: "block", type: "select_columns" },
+        { kind: "block", type: "filter_rows" },
+        { kind: "block", type: "handle_missing" },
+        { kind: "block", type: "sort_data" },
+        { kind: "block", type: "group_summarize" },
+        { kind: "block", type: "merge_data" }
       ]
     },
     {
       kind: "category",
-      name: "Column Operations",
-      colour: "#E67300",
+      name: "🎯 ML Prep",
+      colour: p.ml_prep,
       contents: [
-        { kind: "block", type: "pandas_select_column" },
-        { kind: "block", type: "pandas_select_columns" },
-        { kind: "block", type: "pandas_drop_columns" },
-        { kind: "block", type: "pandas_rename_columns" }
+        { kind: "block", type: "prepare_features" },
+        { kind: "block", type: "split_data" },
+        { kind: "block", type: "scale_features" }
       ]
     },
     {
       kind: "category",
-      name: "Filtering",
-      colour: "#E68A00",
+      name: "🤖 Models",
+      colour: p.ml_model,
       contents: [
-        { kind: "block", type: "pandas_filter" },
-        { kind: "block", type: "pandas_condition" },
-        { kind: "block", type: "pandas_isnull" },
-        { kind: "block", type: "pandas_notnull" },
-        { kind: "block", type: "pandas_dropna" },
-        { kind: "block", type: "pandas_fillna" }
+        { kind: "block", type: "create_model" },
+        { kind: "block", type: "train_model" },
+        { kind: "block", type: "predict" },
+        { kind: "block", type: "grid_search" },
+        { kind: "block", type: "cross_validate" }
       ]
     },
     {
       kind: "category",
-      name: "Aggregation",
-      colour: "#E6A000",
+      name: "📊 Evaluate",
+      colour: p.ml_eval,
       contents: [
-        { kind: "block", type: "pandas_groupby" },
-        { kind: "block", type: "pandas_agg" },
-        { kind: "block", type: "pandas_value_counts" },
-        { kind: "block", type: "pandas_corr" }
+        { kind: "block", type: "evaluate" }
       ]
     },
     {
       kind: "category",
-      name: "Transform",
-      colour: "#E6B700",
+      name: "📤 Output",
+      colour: p.output,
       contents: [
-        { kind: "block", type: "pandas_sort_values" },
-        { kind: "block", type: "pandas_merge" },
-        { kind: "block", type: "pandas_concat" },
-        { kind: "block", type: "pandas_pivot_table" },
-        { kind: "block", type: "pandas_apply" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Output",
-      colour: "#E6CE00",
-      contents: [
-        { kind: "block", type: "pandas_to_csv" },
-        { kind: "block", type: "pandas_print" }
-      ]
-    },
-    { kind: "sep" },
-    {
-      kind: "category",
-      name: "Train/Test Split",
-      colour: "#00897B",
-      contents: [
-        { kind: "block", type: "sklearn_train_test_split" },
-        { kind: "block", type: "sklearn_get_train_data" },
-        { kind: "block", type: "sklearn_get_test_data" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Preprocessing",
-      colour: "#00ACC1",
-      contents: [
-        { kind: "block", type: "sklearn_standard_scaler" },
-        { kind: "block", type: "sklearn_minmax_scaler" },
-        { kind: "block", type: "sklearn_robust_scaler" },
-        { kind: "block", type: "sklearn_label_encoder" },
-        { kind: "block", type: "sklearn_onehot_encoder" },
-        { kind: "block", type: "sklearn_pca" },
-        { kind: "block", type: "sklearn_fit_transform" },
-        { kind: "block", type: "sklearn_transform" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Classification",
-      colour: "#5C6BC0",
-      contents: [
-        { kind: "block", type: "sklearn_logistic_regression" },
-        { kind: "block", type: "sklearn_decision_tree_classifier" },
-        { kind: "block", type: "sklearn_random_forest_classifier" },
-        { kind: "block", type: "sklearn_svc" },
-        { kind: "block", type: "sklearn_knn_classifier" },
-        { kind: "block", type: "sklearn_naive_bayes" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Regression",
-      colour: "#7E57C2",
-      contents: [
-        { kind: "block", type: "sklearn_linear_regression" },
-        { kind: "block", type: "sklearn_ridge" },
-        { kind: "block", type: "sklearn_lasso" },
-        { kind: "block", type: "sklearn_decision_tree_regressor" },
-        { kind: "block", type: "sklearn_random_forest_regressor" },
-        { kind: "block", type: "sklearn_svr" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Clustering",
-      colour: "#AB47BC",
-      contents: [
-        { kind: "block", type: "sklearn_kmeans" },
-        { kind: "block", type: "sklearn_dbscan" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Model Operations",
-      colour: "#EC407A",
-      contents: [
-        { kind: "block", type: "sklearn_model_var" },
-        { kind: "block", type: "sklearn_set_model" },
-        { kind: "block", type: "sklearn_fit" },
-        { kind: "block", type: "sklearn_predict" },
-        { kind: "block", type: "sklearn_predict_proba" },
-        { kind: "block", type: "sklearn_score" },
-        { kind: "block", type: "sklearn_cross_val_score" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Metrics",
-      colour: "#EF5350",
-      contents: [
-        { kind: "block", type: "sklearn_accuracy_score" },
-        { kind: "block", type: "sklearn_precision_score" },
-        { kind: "block", type: "sklearn_recall_score" },
-        { kind: "block", type: "sklearn_f1_score" },
-        { kind: "block", type: "sklearn_confusion_matrix" },
-        { kind: "block", type: "sklearn_classification_report" },
-        { kind: "block", type: "sklearn_mse" },
-        { kind: "block", type: "sklearn_rmse" },
-        { kind: "block", type: "sklearn_mae" },
-        { kind: "block", type: "sklearn_r2_score" }
-      ]
-    },
-    { kind: "sep" },
-    {
-      kind: "category",
-      name: "Values",
-      colour: "#9575CD",
-      contents: [
-        { kind: "block", type: "text_value" },
-        { kind: "block", type: "number_value" },
-        { kind: "block", type: "boolean_value" },
-        { kind: "block", type: "none_value" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Collections",
-      colour: "#4DB6AC",
-      contents: [
-        { kind: "block", type: "array_create" },
-        { kind: "block", type: "array_create_with" },
-        { kind: "block", type: "array_length" },
-        { kind: "block", type: "dict_create" },
-        { kind: "block", type: "dict_get" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Logic",
-      colour: "#42A5F5",
-      contents: [
-        { kind: "block", type: "logic_compare" },
-        { kind: "block", type: "logic_operation" },
-        { kind: "block", type: "logic_not" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Math",
-      colour: "#66BB6A",
-      contents: [
-        { kind: "block", type: "math_arithmetic" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Functions",
-      colour: "#FF7043",
-      contents: [
-        { kind: "block", type: "lambda_simple" }
-      ]
-    },
-    {
-      kind: "category",
-      name: "Variables",
-      colour: "#8D6E63",
-      contents: [
-        { kind: "block", type: "var_set" },
-        { kind: "block", type: "var_get" },
-        { kind: "block", type: "comment_block" }
+        { kind: "block", type: "output" },
+        { kind: "block", type: "comment" }
       ]
     }
   ]
 };
-class F {
+class S {
   constructor(e) {
-    this.workspace = null, this.onChangeCallbacks = [], this.config = e, this.container = e.container, this.generator = v, this.registerBlocks(), this.initWorkspace();
+    this.workspace = null, this.onChangeCallbacks = [], this.config = e, this.container = e.container, this.generator = T, this.registerBlocks(), this.initWorkspace();
   }
   registerBlocks() {
-    g(), A(), E();
+    g(), $(), V();
   }
   initWorkspace() {
-    const e = this.config.toolbox || R;
-    this.workspace = c.inject(this.container, {
+    const e = this.config.toolbox || k;
+    this.workspace = n.inject(this.container, {
       toolbox: e,
       grid: {
         spacing: 20,
@@ -1793,8 +579,8 @@ class F {
       readOnly: this.config.readOnly || !1,
       theme: this.config.theme
     }), this.workspace.addChangeListener(() => {
-      const a = this.generateCode();
-      this.onChangeCallbacks.forEach((r) => r(a));
+      const t = this.generateCode();
+      this.onChangeCallbacks.forEach((i) => i(t));
     });
   }
   generateCode() {
@@ -1807,20 +593,20 @@ class F {
     this.onChangeCallbacks.push(e);
   }
   offChange(e) {
-    const a = this.onChangeCallbacks.indexOf(e);
-    a > -1 && this.onChangeCallbacks.splice(a, 1);
+    const t = this.onChangeCallbacks.indexOf(e);
+    t > -1 && this.onChangeCallbacks.splice(t, 1);
   }
   loadWorkspace(e) {
-    this.workspace && c.serialization.workspaces.load(e, this.workspace);
+    this.workspace && n.serialization.workspaces.load(e, this.workspace);
   }
   saveWorkspace() {
-    return this.workspace ? c.serialization.workspaces.save(this.workspace) : {};
+    return this.workspace ? n.serialization.workspaces.save(this.workspace) : {};
   }
   clearWorkspace() {
     this.workspace && this.workspace.clear();
   }
   resize() {
-    this.workspace && c.svgResize(this.workspace);
+    this.workspace && n.svgResize(this.workspace);
   }
   dispose() {
     this.workspace && (this.workspace.dispose(), this.workspace = null), this.onChangeCallbacks = [];
@@ -1836,15 +622,15 @@ class F {
   }
 }
 export {
-  D as Blockly,
-  F as Pandamonium,
-  T as PythonGenerator,
-  C as commonBlocks,
-  R as defaultToolbox,
-  y as pandasBlocks,
-  v as pythonGenerator,
-  E as registerCommonBlocks,
+  v as Blockly,
+  S as Pandamonium,
+  I as PythonGenerator,
+  w as commonBlocks,
+  k as defaultToolbox,
+  _ as pandasBlocks,
+  T as pythonGenerator,
+  V as registerCommonBlocks,
   g as registerPandasBlocks,
-  A as registerSklearnBlocks,
-  f as sklearnBlocks
+  $ as registerSklearnBlocks,
+  y as sklearnBlocks
 };
