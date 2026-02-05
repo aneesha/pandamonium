@@ -46,6 +46,14 @@ export class PythonGenerator extends Blockly.Generator {
     this.imports.add(importStatement);
   }
 
+  private getVarName(block: Blockly.Block, fieldName: string, defaultName: string): string {
+    const field = block.getField(fieldName);
+    if (field && typeof (field as Blockly.FieldVariable).getText === 'function') {
+      return (field as Blockly.FieldVariable).getText() || defaultName;
+    }
+    return defaultName;
+  }
+
   private registerGenerators(): void {
     // Common blocks
     this.forBlock['text_value'] = (block: Blockly.Block) => {
@@ -144,13 +152,13 @@ export class PythonGenerator extends Blockly.Generator {
     };
 
     this.forBlock['var_set'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'x';
+      const varName = this.getVarName(block, 'VAR', 'x');
       const value = this.valueToCode(block, 'VALUE', ORDER.NONE) || 'None';
       return `${varName} = ${value}\n`;
     };
 
     this.forBlock['var_get'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'x';
+      const varName = this.getVarName(block, 'VAR', 'x');
       return [varName, ORDER.ATOMIC];
     };
 
@@ -192,12 +200,12 @@ export class PythonGenerator extends Blockly.Generator {
     };
 
     this.forBlock['pandas_dataframe_var'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'df';
+      const varName = this.getVarName(block, 'VAR', 'df');
       return [varName, ORDER.ATOMIC];
     };
 
     this.forBlock['pandas_set_dataframe'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'df';
+      const varName = this.getVarName(block, 'VAR', 'df');
       const value = this.valueToCode(block, 'VALUE', ORDER.NONE) || 'pd.DataFrame()';
       return `${varName} = ${value}\n`;
     };
@@ -658,12 +666,12 @@ export class PythonGenerator extends Blockly.Generator {
 
     // Model variable
     this.forBlock['sklearn_model_var'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'model';
+      const varName = this.getVarName(block, 'VAR', 'model');
       return [varName, ORDER.ATOMIC];
     };
 
     this.forBlock['sklearn_set_model'] = (block: Blockly.Block) => {
-      const varName = block.getFieldValue('VAR') || 'model';
+      const varName = this.getVarName(block, 'VAR', 'model');
       const value = this.valueToCode(block, 'VALUE', ORDER.NONE) || 'None';
       return `${varName} = ${value}\n`;
     };

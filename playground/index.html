@@ -1284,6 +1284,15 @@
       imports.add(imp);
     }
 
+    // Helper to get variable name from field_variable
+    function getVarName(block, fieldName, defaultName) {
+      const field = block.getField(fieldName);
+      if (field && field.getText) {
+        return field.getText() || defaultName;
+      }
+      return defaultName;
+    }
+
     // Pandas generators
     pythonGenerator.forBlock['pandas_read_csv'] = function(block) {
       addImport('import pandas as pd');
@@ -1292,12 +1301,12 @@
     };
 
     pythonGenerator.forBlock['pandas_dataframe_var'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'df';
+      const v = getVarName(block, 'VAR', 'df');
       return [v, 0];
     };
 
     pythonGenerator.forBlock['pandas_set_dataframe'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'df';
+      const v = getVarName(block, 'VAR', 'df');
       const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'pd.DataFrame()';
       return `${v} = ${val}\n`;
     };
@@ -1511,12 +1520,12 @@
     };
 
     pythonGenerator.forBlock['sklearn_model_var'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'model';
+      const v = getVarName(block, 'VAR', 'model');
       return [v, 0];
     };
 
     pythonGenerator.forBlock['sklearn_set_model'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'model';
+      const v = getVarName(block, 'VAR', 'model');
       const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'None';
       return `${v} = ${val}\n`;
     };
@@ -1599,13 +1608,13 @@
     };
 
     pythonGenerator.forBlock['var_set'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'x';
+      const v = getVarName(block, 'VAR', 'x');
       const val = pythonGenerator.valueToCode(block, 'VALUE', 0) || 'None';
       return `${v} = ${val}\n`;
     };
 
     pythonGenerator.forBlock['var_get'] = function(block) {
-      const v = block.getFieldValue('VAR') || 'x';
+      const v = getVarName(block, 'VAR', 'x');
       return [v, 0];
     };
 
@@ -2408,6 +2417,8 @@ print("Pandamonium ready!")
         state.workspace.clear();
         Blockly.serialization.workspaces.load(examples[e.target.value], state.workspace);
         e.target.value = '';
+        // Trigger code generation after loading
+        updateCode();
       }
     });
 

@@ -1013,7 +1013,7 @@ function A() {
     };
   });
 }
-const C = 260, h = 280, k = 300, _ = 210, N = {
+const N = 260, h = 280, k = 300, _ = 210, C = {
   // String blocks
   text_value: {
     type: "text_value",
@@ -1022,7 +1022,7 @@ const C = 260, h = 280, k = 300, _ = 210, N = {
       { type: "field_input", name: "TEXT", text: "" }
     ],
     output: "String",
-    colour: C,
+    colour: N,
     tooltip: "A text string",
     helpUrl: ""
   },
@@ -1242,7 +1242,7 @@ const C = 260, h = 280, k = 300, _ = 210, N = {
   }
 };
 function E() {
-  Object.entries(N).forEach(([u, e]) => {
+  Object.entries(C).forEach(([u, e]) => {
     c.Blocks[u] = {
       init: function() {
         this.jsonInit(e);
@@ -1278,6 +1278,10 @@ class T extends c.Generator {
   addImport(e) {
     this.imports.add(e);
   }
+  getVarName(e, a, r) {
+    const o = e.getField(a);
+    return o && typeof o.getText == "function" && o.getText() || r;
+  }
   registerGenerators() {
     this.forBlock.text_value = (e) => [`"${e.getFieldValue("TEXT")}"`, t.ATOMIC], this.forBlock.number_value = (e) => {
       const a = e.getFieldValue("NUM");
@@ -1305,18 +1309,18 @@ class T extends c.Generator {
       return [`${d} ${o} ${m}`, l];
     }, this.forBlock.lambda_simple = (e) => [`lambda x: ${e.getFieldValue("EXPR")}`, t.LAMBDA], this.forBlock.comment_block = (e) => `# ${e.getFieldValue("COMMENT")}
 `, this.forBlock.var_set = (e) => {
-      const a = e.getFieldValue("VAR") || "x", r = this.valueToCode(e, "VALUE", t.NONE) || "None";
+      const a = this.getVarName(e, "VAR", "x"), r = this.valueToCode(e, "VALUE", t.NONE) || "None";
       return `${a} = ${r}
 `;
-    }, this.forBlock.var_get = (e) => [e.getFieldValue("VAR") || "x", t.ATOMIC], this.forBlock.none_value = () => ["None", t.ATOMIC], this.registerPandasGenerators(), this.registerSklearnGenerators();
+    }, this.forBlock.var_get = (e) => [this.getVarName(e, "VAR", "x"), t.ATOMIC], this.forBlock.none_value = () => ["None", t.ATOMIC], this.registerPandasGenerators(), this.registerSklearnGenerators();
   }
   registerPandasGenerators() {
     this.forBlock.pandas_read_csv = (e) => (this.addImport("import pandas as pd"), [`pd.read_csv(${this.valueToCode(e, "PATH", t.NONE) || '""'})`, t.FUNCTION_CALL]), this.forBlock.pandas_read_excel = (e) => {
       this.addImport("import pandas as pd");
       const a = this.valueToCode(e, "PATH", t.NONE) || '""', r = this.valueToCode(e, "SHEET", t.NONE) || "0";
       return [`pd.read_excel(${a}, sheet_name=${r})`, t.FUNCTION_CALL];
-    }, this.forBlock.pandas_read_json = (e) => (this.addImport("import pandas as pd"), [`pd.read_json(${this.valueToCode(e, "PATH", t.NONE) || '""'})`, t.FUNCTION_CALL]), this.forBlock.pandas_create_dataframe = (e) => (this.addImport("import pandas as pd"), [`pd.DataFrame(${this.valueToCode(e, "DATA", t.NONE) || "{}"})`, t.FUNCTION_CALL]), this.forBlock.pandas_dataframe_var = (e) => [e.getFieldValue("VAR") || "df", t.ATOMIC], this.forBlock.pandas_set_dataframe = (e) => {
-      const a = e.getFieldValue("VAR") || "df", r = this.valueToCode(e, "VALUE", t.NONE) || "pd.DataFrame()";
+    }, this.forBlock.pandas_read_json = (e) => (this.addImport("import pandas as pd"), [`pd.read_json(${this.valueToCode(e, "PATH", t.NONE) || '""'})`, t.FUNCTION_CALL]), this.forBlock.pandas_create_dataframe = (e) => (this.addImport("import pandas as pd"), [`pd.DataFrame(${this.valueToCode(e, "DATA", t.NONE) || "{}"})`, t.FUNCTION_CALL]), this.forBlock.pandas_dataframe_var = (e) => [this.getVarName(e, "VAR", "df"), t.ATOMIC], this.forBlock.pandas_set_dataframe = (e) => {
+      const a = this.getVarName(e, "VAR", "df"), r = this.valueToCode(e, "VALUE", t.NONE) || "pd.DataFrame()";
       return `${a} = ${r}
 `;
     }, this.forBlock.pandas_select_columns = (e) => {
@@ -1493,8 +1497,8 @@ class T extends c.Generator {
       this.addImport("from sklearn.model_selection import cross_val_score");
       const a = this.valueToCode(e, "MODEL", t.NONE) || "model", r = this.valueToCode(e, "X", t.NONE) || "X", o = this.valueToCode(e, "Y", t.NONE) || "y", l = e.getFieldValue("CV") || 5;
       return [`cross_val_score(${a}, ${r}, ${o}, cv=${l})`, t.FUNCTION_CALL];
-    }, this.forBlock.sklearn_pca = (e) => (this.addImport("from sklearn.decomposition import PCA"), [`PCA(n_components=${e.getFieldValue("N_COMPONENTS") || 2})`, t.FUNCTION_CALL]), this.forBlock.sklearn_model_var = (e) => [e.getFieldValue("VAR") || "model", t.ATOMIC], this.forBlock.sklearn_set_model = (e) => {
-      const a = e.getFieldValue("VAR") || "model", r = this.valueToCode(e, "VALUE", t.NONE) || "None";
+    }, this.forBlock.sklearn_pca = (e) => (this.addImport("from sklearn.decomposition import PCA"), [`PCA(n_components=${e.getFieldValue("N_COMPONENTS") || 2})`, t.FUNCTION_CALL]), this.forBlock.sklearn_model_var = (e) => [this.getVarName(e, "VAR", "model"), t.ATOMIC], this.forBlock.sklearn_set_model = (e) => {
+      const a = this.getVarName(e, "VAR", "model"), r = this.valueToCode(e, "VALUE", t.NONE) || "None";
       return `${a} = ${r}
 `;
     };
@@ -1509,7 +1513,7 @@ class T extends c.Generator {
 `), o += a, o;
   }
 }
-const v = new T(), F = {
+const v = new T(), R = {
   kind: "categoryToolbox",
   contents: [
     {
@@ -1749,7 +1753,7 @@ const v = new T(), F = {
     }
   ]
 };
-class R {
+class F {
   constructor(e) {
     this.workspace = null, this.onChangeCallbacks = [], this.config = e, this.container = e.container, this.generator = v, this.registerBlocks(), this.initWorkspace();
   }
@@ -1757,7 +1761,7 @@ class R {
     g(), A(), E();
   }
   initWorkspace() {
-    const e = this.config.toolbox || F;
+    const e = this.config.toolbox || R;
     this.workspace = c.inject(this.container, {
       toolbox: e,
       grid: {
@@ -1827,10 +1831,10 @@ class R {
 }
 export {
   D as Blockly,
-  R as Pandamonium,
+  F as Pandamonium,
   T as PythonGenerator,
-  N as commonBlocks,
-  F as defaultToolbox,
+  C as commonBlocks,
+  R as defaultToolbox,
   y as pandasBlocks,
   v as pythonGenerator,
   E as registerCommonBlocks,
